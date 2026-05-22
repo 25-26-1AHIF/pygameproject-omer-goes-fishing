@@ -19,15 +19,16 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> str:
 
 def main():
     gv.init()
-    screen = pygame.display.set_mode((800, 600))
+    screen = pygame.display.set_mode((gv.SCREEN_WIDTH, gv.SCREEN_HEIGHT))
     clock = pygame.time.Clock()
 
     while True:
         if GameScreens.actual == GameScreens.MAIN:
             GameScreens.actual = main_screen(screen, clock)
+        elif GameScreens.actual == GameScreens.PLAY:
+            GameScreens.actual = play_screen(screen, clock)
         elif GameScreens.actual == GameScreens.EXIT:
             break
-
     pygame.quit()
 
 if __name__ == '__main__':
