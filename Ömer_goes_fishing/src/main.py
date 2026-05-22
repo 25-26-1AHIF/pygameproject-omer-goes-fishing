@@ -51,8 +51,6 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
         screen.blit(starten_text, starten_text_rect)
         screen.blit(controls_text, controls_text_rect)
         screen.blit(exit_text, exit_text_rect)
-
-
         pygame.display.flip()
         clock.tick(gv.FPS)
 
