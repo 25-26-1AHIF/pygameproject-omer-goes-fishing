@@ -16,15 +16,30 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         pygame.display.flip()
         clock.tick(gv.FPS)
 
+def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+    pygame.display.set_caption("Controls Screen")
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return GameScreens.EXIT
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return GameScreens.MAIN
+
+    screen.fill("blue")
+    pygame.display.flip()
+    clock.tick(gv.FPS)
+
+
 def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens:
     pygame.display.set_caption("Main Screen")
 
-    titel_text = gv.FONT_BIG.render("Ömer goes fishing", True, "white")
+    Logo = pygame.image.load("./assets/Logo/logo_ohne_hintergrund.png").convert()
     starten_text = gv.FONT_MIDDLE.render("Start", True, "white")
     controls_text = gv.FONT_MIDDLE.render("Controls", True, "white")
     exit_text = gv.FONT_MIDDLE.render("Exit", True, "white")
 
-    title_text_rect = titel_text.get_rect(center = (gv.SCREEN_WIDTH // 1.2, 100))
+    title_text_rect = Logo.get_rect(center = (gv.SCREEN_WIDTH // 1.45, 350))
     starten_text_rect = starten_text.get_rect(center = (gv.SCREEN_WIDTH // 4, 250))
     controls_text_rect = controls_text.get_rect(center = (gv.SCREEN_WIDTH // 4, 350))
     exit_text_rect = exit_text.get_rect(center = (gv.SCREEN_WIDTH // 4, 450))
@@ -42,15 +57,18 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
                     return GameScreens.PLAY
                 if controls_text_rect.collidepoint(event.pos):
                     print("Controls!")
+                    return GameScreens.CONTROLS
                     #Todo Controls Screen
                 if exit_text_rect.collidepoint(event.pos):
                     print("Exit!")
                     return GameScreens.EXIT
-        screen.fill("black")
-        screen.blit(titel_text, title_text_rect)
+
+        screen.fill("white")
+        screen.blit(Logo, title_text_rect)
         screen.blit(starten_text, starten_text_rect)
         screen.blit(controls_text, controls_text_rect)
         screen.blit(exit_text, exit_text_rect)
+
         pygame.display.flip()
         clock.tick(gv.FPS)
 
@@ -64,6 +82,8 @@ def main():
             GameScreens.actual = main_screen(screen, clock)
         elif GameScreens.actual == GameScreens.PLAY:
             GameScreens.actual = play_screen(screen, clock)
+        elif GameScreens.actual == GameScreens.CONTROLS:
+            GameScreens.actual = controls_screen(screen, clock)
         elif GameScreens.actual == GameScreens.EXIT:
             break
     pygame.quit()
