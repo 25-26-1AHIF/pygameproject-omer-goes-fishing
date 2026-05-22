@@ -18,6 +18,23 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
 def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Controls Screen")
+
+    Boot_ctrls = gv.FONT_MIDDLE.render("A/D  für links und rechts bewegen vom Boot", True, "white")
+    Köder_ctrls = gv.FONT_MIDDLE.render("SPACE für Köder werfen", True, "white")
+    minigame_ctrls = gv.FONT_MIDDLE.render("Beim Angel Minigame SPACE gedrückt halten zum Verfolgen vom Fisch", True, "white")
+    interact_ctrl = gv.FONT_MIDDLE.render("Links Klick für Menü Interaktion", True, "white")
+    pause_ctrl = gv.FONT_MIDDLE.render("ESC für Pausenmenü / Exit", True, "white")
+    x = gv.FONT_BIG.render("X", True, "white")
+
+
+    Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 150))
+    Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 250))
+    minigame_ctrls_rect = minigame_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 350))
+    interact_ctrl_rect = interact_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 450))
+    pause_ctrl_rect = pause_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 550))
+    x_rect = x.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
+
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -25,10 +42,20 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return GameScreens.MAIN
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if x_rect.collidepoint(event.pos):
+                    print("Main Menu!")
+                    return GameScreens.MAIN
 
-    screen.fill("blue")
-    pygame.display.flip()
-    clock.tick(gv.FPS)
+        screen.fill("black")
+        screen.blit(Boot_ctrls, Boot_ctrls_rect)
+        screen.blit(Köder_ctrls, Köder_ctrls_rect)
+        screen.blit(minigame_ctrls, minigame_ctrls_rect)
+        screen.blit(interact_ctrl, interact_ctrl_rect)
+        screen.blit(pause_ctrl, pause_ctrl_rect)
+        screen.blit(x, x_rect)
+        pygame.display.flip()
+        clock.tick(gv.FPS)
 
 
 def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens:
@@ -63,14 +90,11 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
                     print("Exit!")
                     return GameScreens.EXIT
 
-        screen.fill("white")
+        screen.fill("black")
         screen.blit(Logo, title_text_rect)
         screen.blit(starten_text, starten_text_rect)
         screen.blit(controls_text, controls_text_rect)
         screen.blit(exit_text, exit_text_rect)
-        pygame.draw.rect(surface=screen, rect=starten_text_rect, color="red", width=1)
-        pygame.draw.rect(surface=screen, rect=controls_text_rect, color="red", width=1)
-        pygame.draw.rect(surface=screen, rect=exit_text_rect, color="red", width=1)
         pygame.display.flip()
         clock.tick(gv.FPS)
 
