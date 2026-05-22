@@ -34,7 +34,7 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens:
     pygame.display.set_caption("Main Screen")
 
-    Logo = pygame.image.load("./assets/Logo/logo_ohne_hintergrund.png").convert()
+    Logo = pygame.image.load("./assets/Logo/logo_ohne_hintergrund.png")
     starten_text = gv.FONT_MIDDLE.render("Start", True, "white")
     controls_text = gv.FONT_MIDDLE.render("Controls", True, "white")
     exit_text = gv.FONT_MIDDLE.render("Exit", True, "white")
@@ -68,7 +68,9 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
         screen.blit(starten_text, starten_text_rect)
         screen.blit(controls_text, controls_text_rect)
         screen.blit(exit_text, exit_text_rect)
-
+        pygame.draw.rect(surface=screen, rect=starten_text_rect, color="red", width=1)
+        pygame.draw.rect(surface=screen, rect=controls_text_rect, color="red", width=1)
+        pygame.draw.rect(surface=screen, rect=exit_text_rect, color="red", width=1)
         pygame.display.flip()
         clock.tick(gv.FPS)
 
