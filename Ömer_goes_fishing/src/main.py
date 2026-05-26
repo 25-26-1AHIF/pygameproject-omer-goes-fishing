@@ -19,6 +19,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Controls Screen")
 
+    Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_4/5.png")
     Boot_ctrls = gv.FONT_MIDDLE.render("A/D  für links und rechts bewegen vom Boot", True, "white")
     Köder_ctrls = gv.FONT_MIDDLE.render("SPACE für Köder werfen", True, "white")
     minigame_ctrls = gv.FONT_MIDDLE.render("Beim Angel Minigame SPACE gedrückt halten zum Verfolgen vom Fisch", True, "white")
@@ -26,7 +27,7 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pause_ctrl = gv.FONT_MIDDLE.render("ESC für Pausenmenü / Exit", True, "white")
     x = gv.FONT_BIG.render("X", True, "white")
 
-
+    Hintergrund_rect = Hintergrund.get_rect(center = (gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 150))
     Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 250))
     minigame_ctrls_rect = minigame_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 350))
@@ -47,7 +48,7 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     print("Main Menu!")
                     return GameScreens.MAIN
 
-        screen.fill("black")
+        screen.blit(Hintergrund, Hintergrund_rect)
         screen.blit(Boot_ctrls, Boot_ctrls_rect)
         screen.blit(Köder_ctrls, Köder_ctrls_rect)
         screen.blit(minigame_ctrls, minigame_ctrls_rect)
@@ -61,11 +62,13 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens:
     pygame.display.set_caption("Main Screen")
 
+    Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_4/5.png")
     Logo = pygame.image.load("./assets/Logo/logo_ohne_hintergrund.png")
     starten_text = gv.FONT_MIDDLE.render("Start", True, "white")
     controls_text = gv.FONT_MIDDLE.render("Controls", True, "white")
     exit_text = gv.FONT_MIDDLE.render("Exit", True, "white")
 
+    Hintergrund_rect = Hintergrund.get_rect(center = (gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     title_text_rect = Logo.get_rect(center = (gv.SCREEN_WIDTH // 1.45, 350))
     starten_text_rect = starten_text.get_rect(center = (gv.SCREEN_WIDTH // 4, 250))
     controls_text_rect = controls_text.get_rect(center = (gv.SCREEN_WIDTH // 4, 350))
@@ -85,12 +88,11 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
                 if controls_text_rect.collidepoint(event.pos):
                     print("Controls!")
                     return GameScreens.CONTROLS
-                    #Todo Controls Screen
                 if exit_text_rect.collidepoint(event.pos):
                     print("Exit!")
                     return GameScreens.EXIT
 
-        screen.fill("black")
+        screen.blit(Hintergrund, Hintergrund_rect)
         screen.blit(Logo, title_text_rect)
         screen.blit(starten_text, starten_text_rect)
         screen.blit(controls_text, controls_text_rect)
