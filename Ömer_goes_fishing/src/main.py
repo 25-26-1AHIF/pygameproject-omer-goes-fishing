@@ -4,6 +4,7 @@ from game_variables.game_variables import GameScreens
 
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
+    pygame.display.set_mode((1920, gv.SCREEN_HEIGHT))
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png")
     Hintergrund_rect = Hintergrund.get_rect(center = (gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     pygame.display.set_caption("Play Screen")
