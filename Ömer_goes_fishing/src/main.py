@@ -2,6 +2,26 @@ import pygame
 from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
 
+def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+
+    Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_5/5.png")
+    Hintergrund_rect = Hintergrund.get_rect(center = (gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+    pygame.display.set_caption("Save Slots Screen")
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print("Exit")
+                return GameScreens.EXIT
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    print("Main Menu!")
+                    return GameScreens.MAIN
+
+        screen.blit(Hintergrund, Hintergrund_rect)
+        pygame.display.flip()
+        clock.tick(gv.FPS)
+
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png")
@@ -93,7 +113,7 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if starten_text_rect.collidepoint(event.pos):
                     print("Start!")
-                    return GameScreens.PLAY
+                    return GameScreens.SAVE_SLOTS
                 if controls_text_rect.collidepoint(event.pos):
                     print("Controls!")
                     return GameScreens.CONTROLS
@@ -121,6 +141,8 @@ def main():
             GameScreens.actual = play_screen(screen, clock)
         elif GameScreens.actual == GameScreens.CONTROLS:
             GameScreens.actual = controls_screen(screen, clock)
+        elif GameScreens.actual == GameScreens.SAVE_SLOTS:
+            GameScreens.actual = save_slots_screen(screen, clock)
         elif GameScreens.actual == GameScreens.EXIT:
             break
     pygame.quit()
