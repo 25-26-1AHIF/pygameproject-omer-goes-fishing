@@ -3,16 +3,21 @@ from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
 
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+
+    Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png")
+    Hintergrund_rect = Hintergrund.get_rect(center = (gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     pygame.display.set_caption("Play Screen")
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("Exit")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    print("Main Menu!")
                     return GameScreens.MAIN
 
-        screen.fill("black")
+        screen.blit(Hintergrund, Hintergrund_rect)
         pygame.display.flip()
         clock.tick(gv.FPS)
 
@@ -39,9 +44,11 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("Exit!")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    print("Main Menu!")
                     return GameScreens.MAIN
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if x_rect.collidepoint(event.pos):
@@ -77,9 +84,11 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print("Exit!")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    print("Exit!")
                     return GameScreens.EXIT
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if starten_text_rect.collidepoint(event.pos):
