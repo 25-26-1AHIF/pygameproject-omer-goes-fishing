@@ -16,7 +16,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     slot1_text = gv.FONT_MIDDLE.render("Slot 1 - Leer", True, "white")
     slot2_text = gv.FONT_MIDDLE.render("Slot 2 - Leer", True, "white")
     slot3_text = gv.FONT_MIDDLE.render("Slot 3 - Leer", True, "white")
-    back_text = gv.FONT_MIDDLE.render("X", True, "white")
+    back_text = gv.FONT_BIG.render("X", True, "white")
 
     # Löschen-Texte (in Rot, damit es nach "Gefahr/Aktion" aussieht)
     delete1_text = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
@@ -25,15 +25,14 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
     # 2. Rechtecke für die Buttons
     # Slots etwas nach links versetzt, damit rechts Platz für den Löschen-Button ist
-    slot1_rect = slot1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 200))
-    slot2_rect = slot2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 300))
-    slot3_rect = slot3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 400))
+    slot1_rect = slot1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 250))
+    slot2_rect = slot2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 350))
+    slot3_rect = slot3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 450))
 
     # Löschen-Buttons rechts daneben
-    delete1_rect = delete1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 200))
-    delete2_rect = delete2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 300))
-    delete3_rect = delete3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 400))
-
+    delete1_rect = delete1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 250))
+    delete2_rect = delete2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 350))
+    delete3_rect = delete3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 450))
     back_rect = back_text.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
 
