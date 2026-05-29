@@ -46,7 +46,7 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 - [ ] Zweite Welt
 - [ ] Sounds
 - [ ] Haustiere
-- [ ] Save Slots
+- [X] Save Slots
 - [ ] Boot Upgrades
 - [ ] Fischgewicht
 - [ ] Fisch-Sammelbuch
