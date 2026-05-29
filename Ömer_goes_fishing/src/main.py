@@ -1,40 +1,44 @@
 import pygame
 from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
-
+from save_manager import load_save, delete_save, save_game
 
 def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_5/5.png")
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     pygame.display.set_caption("Save Slots Screen")
 
-    # KI-Anfang
-    # KI: Qwen
-    # prompt: mach mir die buttons gui fürs save slot screen
-
-    # 1. Texte für die Buttons erstellen
-    slot1_text = gv.FONT_MIDDLE.render("Slot 1 - Leer", True, "white")
-    slot2_text = gv.FONT_MIDDLE.render("Slot 2 - Leer", True, "white")
-    slot3_text = gv.FONT_MIDDLE.render("Slot 3 - Leer", True, "white")
     back_text = gv.FONT_BIG.render("X", True, "white")
-
-    # Löschen-Texte (in Rot, damit es nach "Gefahr/Aktion" aussieht)
-    delete1_text = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
-    delete2_text = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
-    delete3_text = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
-
-    # 2. Rechtecke für die Buttons
-    # Slots etwas nach links versetzt, damit rechts Platz für den Löschen-Button ist
-    slot1_rect = slot1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 250))
-    slot2_rect = slot2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 350))
-    slot3_rect = slot3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, 450))
-
-    # Löschen-Buttons rechts daneben
-    delete1_rect = delete1_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 250))
-    delete2_rect = delete2_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 350))
-    delete3_rect = delete3_text.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, 450))
     back_rect = back_text.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
+    def refresh_ui():
+        """Liest die Save-Dateien aus und rendert die Texte/Rects dynamisch neu."""
+        texts, rects = [], []
+        del_texts, del_rects = [], []
+
+        for i in range(1, 4):
+            y_pos = 100 + i * 100  # 200, 300, 400
+            save_data = load_save(i)
+
+            if save_data:
+                label = f"Slot {i} | Geld: {save_data.get('money','')}€ | {save_data.get('timestamp', '')}"
+            else:
+                label = f"Slot {i} - Neu starten"
+
+            t = gv.FONT_MIDDLE.render(label, True, "white")
+            r = t.get_rect(center=(gv.SCREEN_WIDTH // 2 - 100, y_pos))
+            texts.append(t)
+            rects.append(r)
+
+            dt = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
+            dr = dt.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, y_pos))
+            del_texts.append(dt)
+            del_rects.append(dr)
+
+        return texts, rects, del_texts, del_rects
+
+    # Initiales Laden der UI-Elemente
+    slot_texts, slot_rects, delete_texts, delete_rects = refresh_ui()
 
     while True:
         for event in pygame.event.get():
@@ -46,28 +50,30 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     print("Main Menu!")
                     return GameScreens.MAIN
 
-            # Maus-Klicks abfangen
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Slot-Auswahl -> Weiterleitung zum Play Screen
-                if slot1_rect.collidepoint(event.pos):
-                    print("Slot 1 ausgewählt -> Starte Spiel!")
-                    return GameScreens.PLAY
-                if slot2_rect.collidepoint(event.pos):
-                    print("Slot 2 ausgewählt -> Starte Spiel!")
-                    return GameScreens.PLAY
-                if slot3_rect.collidepoint(event.pos):
-                    print("Slot 3 ausgewählt -> Starte Spiel!")
-                    return GameScreens.PLAY
+                for i, rect in enumerate(slot_rects):
+                    if rect.collidepoint(event.pos):
+                        slot_num = i + 1
+
+                        # Wenn der Slot leer ist, erstellen wir einen neuen Spielstand
+                        if load_save(slot_num) is None:
+                            save_game(slot_num, {"money": 0, "player_name": "Fischer"})
+
+                        # Wir hängen dynamisch eine Variable an gv, damit der play_screen weiß,
+                        # welcher Slot gerade aktiv ist.
+                        gv.current_slot = slot_num
+                        print(f"Slot {slot_num} ausgewählt -> Starte Spiel!")
+                        return GameScreens.PLAY
 
                 # Löschen-Buttons
-                if delete1_rect.collidepoint(event.pos):
-                    print("Slot 1 gelöscht!")
-                    # Hier später deine Speicherstands-Logik einbauen:
-                    # z.B. save_data[0].clear() und slot1_text neu rendern
-                if delete2_rect.collidepoint(event.pos):
-                    print("Slot 2 gelöscht!")
-                if delete3_rect.collidepoint(event.pos):
-                    print("Slot 3 gelöscht!")
+                for i, rect in enumerate(delete_rects):
+                    if rect.collidepoint(event.pos):
+                        slot_num = i + 1
+                        delete_save(slot_num)
+                        # UI aktualisieren, damit "Neu starten" wieder dasteht
+                        slot_texts, slot_rects, delete_texts, delete_rects = refresh_ui()
+                        print(f"Slot {slot_num} gelöscht!")
 
                 # Zurück-Button
                 if back_rect.collidepoint(event.pos):
@@ -76,16 +82,11 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         screen.blit(Hintergrund, Hintergrund_rect)
 
-        # 4. Dann den Text (die eigentlichen Buttons) darüber zeichnen
-        screen.blit(slot1_text, slot1_rect)
-        screen.blit(slot2_text, slot2_rect)
-        screen.blit(slot3_text, slot3_rect)
-        screen.blit(delete1_text, delete1_rect)
-        screen.blit(delete2_text, delete2_rect)
-        screen.blit(delete3_text, delete3_rect)
+        # 5. Dann den Text (die eigentlichen Buttons) darüber zeichnen
+        for i in range(3):
+            screen.blit(slot_texts[i], slot_rects[i])
+            screen.blit(delete_texts[i], delete_rects[i])
         screen.blit(back_text, back_rect)
-
-        # KI ende
 
         pygame.display.flip()
         clock.tick(gv.FPS)

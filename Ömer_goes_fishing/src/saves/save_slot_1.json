@@ -1,27 +1,5 @@
 {
-  "player_name": "Ömer",
-  "money": 1000,
-  "health_mom": 100,
-  "inventory": {
-    "Karpfen": 2,
-    "Wels": 1,
-    "Räuber": 1,
-    "Hecht": 2,
-    "Forelle": 2
-  },
-  "upgrades": {
-    "rod_level": 1,
-    "bait_level": 1,
-    "boat_level": 1
-  },
-  "caught_fish": [
-    "Karpfen",
-    "Wels",
-    "Räuber",
-    "Hecht",
-    "Hecht",
-    "Forelle",
-    "Forelle",
-    "Karpfen"
-  ]
+    "money": 0,
+    "player_name": "Fischer",
+    "timestamp": "29.05.2026 12:18"
 }
