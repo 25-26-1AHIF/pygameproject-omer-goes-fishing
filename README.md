@@ -55,7 +55,7 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 ## 🐟 Spielelemente
 
-- **Spieler** (Ömer) & **Onkel Ibo**
+- **Spieler** (Ömer) & **Onkel Ibo** & **Onkel Kemal** & **Mutter**(nur story)
 - Verschiedene **Fische**
 - **Angelsystem** mit Minigame
 - **Wasser** / Meeresumgebung
