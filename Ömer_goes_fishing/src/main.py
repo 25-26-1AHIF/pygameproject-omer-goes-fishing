@@ -116,7 +116,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     water_tile_w = wasser_tile_raw.get_width()
     water_tile_h = wasser_tile_raw.get_height()
 
-    # HIER GEÄNDERT: Breite wird jetzt dynamisch berechnet, um Verzerrung zu verhindern!
+    # Breite wird dynamisch berechnet, um Verzerrung zu verhindern
     wasser_scaled_h = TARGET_BLOCK_SIZE
     wasser_scaled_w = int(water_tile_w * (wasser_scaled_h / water_tile_h))
     wasser_tile = pygame.transform.scale(wasser_tile_raw, (wasser_scaled_w, wasser_scaled_h))
@@ -141,26 +141,79 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     # 5. Wasser-Fläche vorrendern (Rechts daneben)
     water_surface = pygame.Surface((water_width, bereich_height))
     for y in range(0, bereich_height, wasser_scaled_h):
-        # Erhöhter Puffer (+ wasser_scaled_w), damit am rechten Bildschirmrand kein Spalt entsteht
         for x in range(0, water_width + wasser_scaled_w, wasser_scaled_w):
             water_surface.blit(wasser_tile, (x, y))
+
+    # =========================================================================
+    # ENTITIES LADEN, SKALIEREN & PERFEKT POSITIONIEREN
+    # =========================================================================
+    SCALE_FACTOR = 2.5
+
+    # Boot komplett laden und vergrößern
+    boot_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Boat.png").convert_alpha()
+    boot_w = int(boot_raw.get_width() * SCALE_FACTOR)
+    boot_h = int(boot_raw.get_height() * SCALE_FACTOR)
+    boot_img = pygame.transform.scale(boot_raw, (boot_w, boot_h))
+
+    # Fischer laden: Wir schneiden exakt unter der Hüfte ab (Höhe 28px).
+    fischer_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_walk.png").convert_alpha()
+    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 28))
+
+    fischer_w = int(fischer_ganz_raw.get_width() * SCALE_FACTOR)
+    fischer_h = int(fischer_ganz_raw.get_height() * SCALE_FACTOR)
+    fischer_img = pygame.transform.scale(fischer_ganz_raw, (fischer_w, fischer_h))
+
+    # Positionen & Bewegung auf dem Wasser einrichten
+    boat_y = y_position_am_boden - int(12 * SCALE_FACTOR)
+    player_x = sand_width + 20
+    player_speed = 5
+
+    # Bewegungsgrenzen
+    min_x = sand_width
+    max_x = gv.SCREEN_WIDTH - boot_img.get_width()
+
+    # Offsets für den Fischer
+    player_x_offset = int(8 * SCALE_FACTOR)
+    player_y_offset = int(-15 * SCALE_FACTOR)
+    # =========================================================================
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Exit")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("Main Menu!")
                     return GameScreens.MAIN
+
+        # --- BEWEGUNG STEUERUNG (A / D & Pfeiltasten) ---
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+            player_x -= player_speed
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+            player_x += player_speed
+
+        # Grenzen einhalten
+        if player_x < min_x:
+            player_x = min_x
+        if player_x > max_x:
+            player_x = max_x
 
         # Screen leeren
         screen.fill((0, 0, 0))
 
-        # 6. Die vorbereiteten Flächen ganz unten am Boden zeichnen
+        # 6. Hintergründe zeichnen
         screen.blit(sand_surface, (0, y_position_am_boden))
         screen.blit(water_surface, (sand_width, y_position_am_boden))
+
+        # =========================================================================
+        # RENDERING: ERST FISCHER, DANN BOOT DARÜBER
+        # =========================================================================
+        # 1. Den abgeschnittenen Fischer zeichnen
+        screen.blit(fischer_img, (player_x + player_x_offset, boat_y + player_y_offset))
+
+        # 2. Das Boot DARÜBER zeichnen. Verdeckt die Schnittkante des Fischers perfekt!
+        screen.blit(boot_img, (player_x, boat_y))
+        # =========================================================================
 
         pygame.display.flip()
         clock.tick(gv.FPS)
