@@ -185,7 +185,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         slot = getattr(gv, 'current_slot', 1)
         save_data = load_save(slot) or {"money": 0}
 
-        money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€", True, "white")
+        money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€ / 50.000,--€", True, "white")
         screen.blit(money_txt, (20, 20))
 
         if save_data["money"] >= 50000:
