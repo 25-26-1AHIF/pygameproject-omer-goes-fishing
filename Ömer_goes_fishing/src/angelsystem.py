@@ -116,14 +116,17 @@ class FishingSystem:
         # Text-Overlays zeichnen
         if self.state == "WAITING":
             txt = gv.FONT_MIDDLE.render("Köder im Wasser... Warten...", True, "white")
-            screen.blit(txt, (gv.SCREEN_WIDTH // 2 - 140, 60))
+            draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
+            screen.blit(txt, draw_rect)
         elif self.state == "BITE":
             txt = gv.FONT_BIG.render("!! BISS !! DRÜCKE SPACE!", True, (255, 50, 50))
-            screen.blit(txt, (gv.SCREEN_WIDTH // 2 - 180, 50))
+            draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
+            screen.blit(txt, draw_rect)
         elif self.state == "RESULT":
             color = (50, 255, 50) if "gefangen" in self.result_text else (255, 50, 50)
             txt = gv.FONT_BIG.render(self.result_text, True, color)
-            screen.blit(txt, (gv.SCREEN_WIDTH // 2 - 120, 50))
+            draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
+            screen.blit(txt, draw_rect)
 
         elif self.state == "MINIGAME":
             # 1. Hintergrund-Messbalken

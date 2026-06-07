@@ -33,7 +33,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             rects.append(r)
 
             dt = gv.FONT_MIDDLE.render("Löschen", True, (255, 50, 50))
-            dr = dt.get_rect(center=(gv.SCREEN_WIDTH // 2 + 150, y_pos))
+            dr = dt.get_rect(center=(gv.SCREEN_WIDTH // 2 + 250, y_pos))
             del_texts.append(dt)
             del_rects.append(dr)
 
@@ -190,12 +190,13 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         inv_list = [f"{count}x {fish}" for fish, count in inventory.content.items()]
         inv_string = ", ".join(inv_list) if inv_list else "Leer"
-        inv_txt = gv.FONT_MIDDLE.render(f"Inventar: {inv_string}", True, (200, 200, 200))
+        inv_txt = gv.FONT_SMALL.render(f"Inventar: {inv_string}", True, (200, 200, 200))
         screen.blit(inv_txt, (20, 55))
 
         if player_x <= sand_width:
-            shop_txt = gv.FONT_MIDDLE.render("Drücke 'E' zum Fische verkaufen", True, (255, 255, 100))
-            screen.blit(shop_txt, (gv.SCREEN_WIDTH // 2 - 150, 110))
+            shop_txt = gv.FONT_SMALL.render("Drücke 'E' zum Fische verkaufen", True, (255, 255, 100))
+            draw_rect = shop_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 12))
+            screen.blit(shop_txt, draw_rect)
 
         pygame.display.flip()
         clock.tick(gv.FPS)
