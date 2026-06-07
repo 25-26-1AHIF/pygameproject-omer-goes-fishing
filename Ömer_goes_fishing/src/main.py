@@ -107,22 +107,18 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     # EINSTELLUNGEN FÜR DIE GRÖSSE UND POSITION
     # =========================================================================
     TARGET_BLOCK_SIZE = 96  # Größe eines Quadrats
-    bloecke_hoch = 1  # HIER GEÄNDERT: Nur noch 1 Reihe am untersten Rand!
-    sand_bloecke_breite = 3  # Wie viele Blöcke Sand sollen links sein?
+    bloecke_hoch = 1  # Nur 1 Reihe am untersten Rand
+    sand_bloecke_breite = 3  # Wie viele Blöcke Sand sollen links sein
     # =========================================================================
 
-    # 1. Wasser laden, herausschneiden und vergrößern
-    wasser_gesamt = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Water.png").convert_alpha()
-    img_w = wasser_gesamt.get_width()
-    img_h = wasser_gesamt.get_height()
+    # 1. Wasser laden (die komplette Textur nutzen, um Zerschneiden zu verhindern)
+    wasser_tile_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Water.png").convert_alpha()
+    water_tile_w = wasser_tile_raw.get_width()
+    water_tile_h = wasser_tile_raw.get_height()
 
-    water_tile_w = min(96, img_w)
-    water_tile_h = min(48, img_h)
-    wasser_tile_raw = wasser_gesamt.subsurface(pygame.Rect(0, 0, water_tile_w, water_tile_h))
-
-    # Wasser proportional skalieren
-    wasser_scaled_w = TARGET_BLOCK_SIZE * 2
+    # HIER GEÄNDERT: Breite wird jetzt dynamisch berechnet, um Verzerrung zu verhindern!
     wasser_scaled_h = TARGET_BLOCK_SIZE
+    wasser_scaled_w = int(water_tile_w * (wasser_scaled_h / water_tile_h))
     wasser_tile = pygame.transform.scale(wasser_tile_raw, (wasser_scaled_w, wasser_scaled_h))
 
     # 2. Sand laden und vergrößern
@@ -145,6 +141,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     # 5. Wasser-Fläche vorrendern (Rechts daneben)
     water_surface = pygame.Surface((water_width, bereich_height))
     for y in range(0, bereich_height, wasser_scaled_h):
+        # Erhöhter Puffer (+ wasser_scaled_w), damit am rechten Bildschirmrand kein Spalt entsteht
         for x in range(0, water_width + wasser_scaled_w, wasser_scaled_w):
             water_surface.blit(wasser_tile, (x, y))
 
@@ -158,7 +155,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     print("Main Menu!")
                     return GameScreens.MAIN
 
-        # Screen leeren (Der obere Bereich bleibt schwarz für den Himmel / Boote)
+        # Screen leeren
         screen.fill((0, 0, 0))
 
         # 6. Die vorbereiteten Flächen ganz unten am Boden zeichnen
