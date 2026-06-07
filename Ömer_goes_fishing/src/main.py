@@ -11,6 +11,11 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     back_text = gv.FONT_BIG.render("X", True, "white")
     back_rect = back_text.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
+    # KI-Anfang
+    # KI: Qwen
+    # 1. prompt: mach mir die buttons gui fürs save slot screen
+    # 2. prompt: save files mit allen infos auslesen und in die buttons einfügen
+
     def refresh_ui():
         """Liest die Save-Dateien aus und rendert die Texte/Rects dynamisch neu."""
         texts, rects = [], []
@@ -87,6 +92,8 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             screen.blit(slot_texts[i], slot_rects[i])
             screen.blit(delete_texts[i], delete_rects[i])
         screen.blit(back_text, back_rect)
+
+        # KI ende
 
         pygame.display.flip()
         clock.tick(gv.FPS)
