@@ -35,11 +35,11 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 ## ✅ Must-Haves
 
-- [ ] Angelsystem (Köder werfen + Minigame)
-- [ ] Boot bewegen
+- [x] Angelsystem (Köder werfen + Minigame)
+- [x] Boot bewegen
 - [ ] Upgrades (Angel, Köder)
-- [ ] Fische verkaufen
-- [ ] Inventar (aktuelle Fische anzeigen)
+- [x] Fische verkaufen
+- [x] Inventar (aktuelle Fische anzeigen)
 
 ## ⭐ Nice-to-Haves
 
