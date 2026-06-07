@@ -188,6 +188,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€", True, "white")
         screen.blit(money_txt, (20, 20))
 
+        if save_data["money"] >= 50000:
+            end_txt = gv.FONT_BIG.render("Glückwunsch! Du hast 50.000€ erreicht!", True, "green")
+            end_rect = end_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+            screen.blit(end_txt, end_rect)
+
         inv_list = [f"{count}x {fish}" for fish, count in inventory.content.items()]
         inv_string = ", ".join(inv_list) if inv_list else "Leer"
         inv_txt = gv.FONT_SMALL.render(f"Inventar: {inv_string}", True, (200, 200, 200))
