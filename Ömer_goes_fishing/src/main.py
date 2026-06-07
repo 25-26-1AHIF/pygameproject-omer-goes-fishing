@@ -14,13 +14,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     back_text = gv.FONT_BIG.render("X", True, "white")
     back_rect = back_text.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
-    # KI-Anfang
-    # KI: Qwen
-    # 1. prompt: mach mir die buttons gui fürs save slot screen
-    # 2. prompt: save files mit allen infos auslesen und in die buttons einfügen
-
     def refresh_ui():
-        """Liest die Save-Dateien aus und rendert die Texte/Rects dynamisch neu."""
         texts, rects = [], []
         del_texts, del_rects = [], []
 
@@ -45,58 +39,40 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         return texts, rects, del_texts, del_rects
 
-    # Initiales Laden der UI-Elemente
     slot_texts, slot_rects, delete_texts, delete_rects = refresh_ui()
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Exit")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("Main Menu!")
                     return GameScreens.MAIN
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # Slot-Auswahl -> Weiterleitung zum Play Screen
                 for i, rect in enumerate(slot_rects):
                     if rect.collidepoint(event.pos):
                         slot_num = i + 1
-
-                        # Wenn der Slot leer ist, erstellen wir einen neuen Spielstand
                         if load_save(slot_num) is None:
                             save_game(slot_num, {"money": 0, "player_name": "Fischer"})
-
-                        # Wir hängen dynamisch eine Variable an gv, damit der play_screen weiß,
-                        # welcher Slot gerade aktiv ist.
                         gv.current_slot = slot_num
-                        print(f"Slot {slot_num} ausgewählt -> Starte Spiel!")
                         return GameScreens.PLAY
 
-                # Löschen-Buttons
                 for i, rect in enumerate(delete_rects):
                     if rect.collidepoint(event.pos):
                         slot_num = i + 1
                         delete_save(slot_num)
-                        # UI aktualisieren, damit "Neu starten" wieder dasteht
                         slot_texts, slot_rects, delete_texts, delete_rects = refresh_ui()
-                        print(f"Slot {slot_num} gelöscht!")
 
-                # Zurück-Button
                 if back_rect.collidepoint(event.pos):
-                    print("Main Menu!")
                     return GameScreens.MAIN
 
         screen.blit(Hintergrund, Hintergrund_rect)
 
-        # 5. Dann den Text (die eigentlichen Buttons) darüber zeichnen
         for i in range(3):
             screen.blit(slot_texts[i], slot_rects[i])
             screen.blit(delete_texts[i], delete_rects[i])
         screen.blit(back_text, back_rect)
-
-        # KI ende
 
         pygame.display.flip()
         clock.tick(gv.FPS)
@@ -105,9 +81,6 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Play Screen")
 
-    # =========================================================================
-    # SYSTEM INITIALISIERUNG
-    # =========================================================================
     inventory = Inventory()
     fishing_system = FishingSystem(inventory)
 
@@ -156,7 +129,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     boot_img = pygame.transform.scale(boot_raw, (boot_w, boot_h))
 
     fischer_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_walk.png").convert_alpha()
-    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 28))
+    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 38))
     fischer_w = int(fischer_ganz_raw.get_width() * SCALE_FACTOR)
     fischer_h = int(fischer_ganz_raw.get_height() * SCALE_FACTOR)
     fischer_img = pygame.transform.scale(fischer_ganz_raw, (fischer_w, fischer_h))
@@ -164,10 +137,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     boat_y = y_position_am_boden - int(12 * SCALE_FACTOR) - 1
     player_x = sand_width + 20
     player_speed = 5
-    min_x = sand_width
     max_x = gv.SCREEN_WIDTH - boot_img.get_width()
-    player_x_offset = int(8 * SCALE_FACTOR)
-    player_y_offset = int(-15 * SCALE_FACTOR)
+
+    # --- JETZT RICHTIG: Offsets angepasst, damit er oben herausschaut ---
+    player_x_offset = int(18 * SCALE_FACTOR)  # Setzt ihn horizontal mittig ins Boot
+    player_y_offset = int(-30 * SCALE_FACTOR) # Zieht ihn weit genug HOCH, damit er nicht unten rausguckt!
 
     while True:
         for event in pygame.event.get():
@@ -177,62 +151,48 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 if event.key == pygame.K_ESCAPE:
                     return GameScreens.MAIN
 
-            # Übergibt Events an das Angelsystem (für den einmaligen Druck von SPACE)
             fishing_system.handle_event(event)
 
-        # --- BEWEGUNG & SELLING STEUERUNG ---
         keys = pygame.key.get_pressed()
 
-        # Boot darf sich im Minigame nicht bewegen, damit man sich konzentrieren kann
         if fishing_system.state != "MINIGAME":
             if keys[pygame.K_a] or keys[pygame.K_LEFT]:
                 player_x -= player_speed
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
                 player_x += player_speed
 
-        # Grenzen einhalten (Erlaubt dem Boot jetzt ganz links an den Sand heranzufahren!)
         if player_x < sand_width - 40:
             player_x = sand_width - 40
         if player_x > max_x:
             player_x = max_x
 
-        # Verkaufen, wenn man am Sand steht und 'E' drückt
         if player_x <= sand_width and keys[pygame.K_e]:
             inventory.sell_all_fish()
 
-        # Update des Angelsystems aufrufen
         fishing_system.update()
 
-        # --- RENDERING ---
         screen.fill((0, 0, 0))
         screen.blit(Hintergrund, Hintergrund_rect)
         screen.blit(sand_surface, (0, y_position_am_boden))
         screen.blit(water_surface, (sand_width, y_position_am_boden - 1))
 
-        # Fischer und Boot zeichnen
+        # --- REIHENFOLGE: Erst Fischer im Hintergrund, dann das Boot davor zeichnen ---
         screen.blit(fischer_img, (player_x + player_x_offset, boat_y + player_y_offset))
         screen.blit(boot_img, (player_x, boat_y))
 
-        # Angelsystem UI zeichnen
         fishing_system.draw(screen)
 
-        # =========================================================================
-        # LIVE INTERFACE (GELD & INVENTAR ANZEIGEN)
-        # =========================================================================
         slot = getattr(gv, 'current_slot', 1)
         save_data = load_save(slot) or {"money": 0}
 
-        # Geldanzeige oben links
         money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€", True, "white")
         screen.blit(money_txt, (20, 20))
 
-        # Inventaranzeige direkt darunter
         inv_list = [f"{count}x {fish}" for fish, count in inventory.content.items()]
         inv_string = ", ".join(inv_list) if inv_list else "Leer"
         inv_txt = gv.FONT_MIDDLE.render(f"Inventar: {inv_string}", True, (200, 200, 200))
         screen.blit(inv_txt, (20, 55))
 
-        # Verkaufshinweis einblenden, wenn das Boot nah genug am Sand ist
         if player_x <= sand_width:
             shop_txt = gv.FONT_MIDDLE.render("Drücke 'E' zum Fische verkaufen", True, (255, 255, 100))
             screen.blit(shop_txt, (gv.SCREEN_WIDTH // 2 - 150, 110))
@@ -264,15 +224,12 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Exit!")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("Main Menu!")
                     return GameScreens.MAIN
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if x_rect.collidepoint(event.pos):
-                    print("Main Menu!")
                     return GameScreens.MAIN
 
         screen.blit(Hintergrund, Hintergrund_rect)
@@ -304,21 +261,16 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("Exit!")
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    print("Exit!")
                     return GameScreens.EXIT
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if starten_text_rect.collidepoint(event.pos):
-                    print("Start!")
                     return GameScreens.SAVE_SLOTS
                 if controls_text_rect.collidepoint(event.pos):
-                    print("Controls!")
                     return GameScreens.CONTROLS
                 if exit_text_rect.collidepoint(event.pos):
-                    print("Exit!")
                     return GameScreens.EXIT
 
         screen.blit(Hintergrund, Hintergrund_rect)
