@@ -2,7 +2,7 @@
 from game_variables.game_variables import GameVariables as gv
 from save_manager import save_game, load_save
 
-# Definition aller Fischarten mit Verkaufspreis und Schwierigkeit
+# Eine Liste aller Fischarten mit ihren Verkaufspreisen und Schwierigkeitsgraden für das Minigame
 FISH_TYPES = {
     "Hering": {"price": 15, "difficulty": 1.0},
     "Makrele": {"price": 25, "difficulty": 1.2},
@@ -14,67 +14,69 @@ FISH_TYPES = {
 
 class Inventory:
     def __init__(self):
+        # Das Inventar ist am Anfang ein leeres Wörterbuch (Dictionary)
         self.content = {}
-        # Beim Erstellen des Inventars sofort die Fische aus dem aktiven Save-Slot laden
+        # Sobald das Inventar geladen wird, holen wir die Fische aus dem Spielstand
         self.load_from_save()
 
     def load_from_save(self):
-        """Lädt das gespeicherte Inventar aus dem aktiven Save-Slot."""
-        slot = getattr(gv, 'current_slot', 1)
-        save_data = load_save(slot)
+        """Lädt die gespeicherten Fische aus dem aktuell aktiven Save-Slot."""
+        # Welcher Slot ist aktiv? Wenn keiner gesetzt ist, nimm standardmäßig Slot 1
+        aktiver_slot = getattr(gv, 'current_slot', 1)
+        spielstand = load_save(aktiver_slot)
 
-        if save_data and "inventory" in save_data:
-            # Erstellt eine echte Kopie des gespeicherten Inventar-Wörterbuchs
-            self.content = dict(save_data["inventory"])
+        # Wenn ein Spielstand existiert und dort bereits Fische drin sind, lade sie
+        if spielstand and "inventory" in spielstand:
+            self.content = dict(spielstand["inventory"])
         else:
             self.content = {}
 
     def save_to_disk(self):
-        """Speichert den aktuellen Zustand des Inventars in die Save-Datei."""
-        slot = getattr(gv, 'current_slot', 1)
-        save_data = load_save(slot)
+        """Sichert das aktuelle Inventar permanent in die Save-Datei."""
+        aktiver_slot = getattr(gv, 'current_slot', 1)
+        spielstand = load_save(aktiver_slot)
 
-        if save_data is None:
-            save_data = {"money": 0, "player_name": "Fischer"}
+        # Falls die Datei leer war, erstellen wir ein Standard-Objekt
+        if spielstand is None:
+            spielstand = {"money": 0, "player_name": "Fischer"}
 
-        # Das Inventar-Diktat im Spielstand aktualisieren
-        save_data["inventory"] = self.content
-        save_game(slot, save_data)
+        # Wir fügen unser aktuelles Inventar dem Spielstand hinzu und speichern
+        spielstand["inventory"] = self.content
+        save_game(aktiver_slot, spielstand)
 
-    def add_fish(self, fish_name):
-        """Fügt einen Fisch zum Inventar hinzu und speichert sofort."""
-        if fish_name in FISH_TYPES:
-            self.content[fish_name] = self.content.get(fish_name, 0) + 1
-
-            # Direkt auf der Festplatte sichern!
+    def add_fish(self, fisch_name):
+        """Fügt einen gefangenen Fisch hinzu und speichert sofort auf der Festplatte."""
+        if fisch_name in FISH_TYPES:
+            # Erhöhe die Anzahl des Fisches um 1. Falls er noch nicht existiert, starte bei 0 + 1
+            self.content[fisch_name] = self.content.get(fisch_name, 0) + 1
+            # Sofort auf der Festplatte sichern, damit nichts verloren geht
             self.save_to_disk()
-            print(f"Inventar: {fish_name} wurde hinzugefügt und dauerhaft gespeichert!")
 
     def sell_all_fish(self):
-        """Verkauft alle Fische, leert das Inventar und speichert das Geld + leeres Inventar."""
-        total_earnings = 0
-        for fish_name, count in self.content.items():
-            total_earnings += FISH_TYPES[fish_name]["price"] * count
+        """Verkauft alle Fische, schreibt das Geld dem Spielstand gut und leert das Inventar."""
+        gesamter_verdienst = 0
 
-        if total_earnings > 0:
-            slot = getattr(gv, 'current_slot', 1)
-            save_data = load_save(slot)
+        # Berechne den Gesamtwert aller Fische im Inventar
+        for fisch_name, anzahl in self.content.items():
+            gesamter_verdienst += FISH_TYPES[fisch_name]["price"] * anzahl
 
-            if save_data is None:
-                save_data = {"money": 0, "player_name": "Fischer"}
+        # Wenn wir überhaupt Fische zum Verkaufen haben:
+        if gesamter_verdienst > 0:
+            aktiver_slot = getattr(gv, 'current_slot', 1)
+            spielstand = load_save(aktiver_slot)
 
-            # 1. Geld gutschreiben
-            save_data["money"] += total_earnings
+            if spielstand is None:
+                spielstand = {"money": 0, "player_name": "Fischer"}
 
-            # 2. Lokales Inventar leeren
+            # 1. Geld im Spielstand erhöhen
+            spielstand["money"] += gesamter_verdienst
+            # 2. Unser lokales Inventar im Spiel leeren
             self.content.clear()
+            # 3. Das Inventar auch in der Speicherdatei auf leer setzen
+            spielstand["inventory"] = {}
 
-            # 3. Inventar in der Save-Datei leeren
-            save_data["inventory"] = {}
+            # Alles final in die Save-Datei schreiben
+            save_game(aktiver_slot, spielstand)
+            return gesamter_verdienst
 
-            # Alles zusammen final speichern
-            save_game(slot, save_data)
-
-            print(f"Erfolgreich verkauft! +{total_earnings}€ verdient. Save-Datei aktualisiert.")
-            return total_earnings
-        return 0
+        return 0  # Nichts verdient, weil das Inventar leer war
