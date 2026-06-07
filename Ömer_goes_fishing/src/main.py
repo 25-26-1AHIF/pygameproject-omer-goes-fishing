@@ -3,6 +3,7 @@ from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
 from save_manager import load_save, delete_save, save_game
 
+
 def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_5/5.png")
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
@@ -26,7 +27,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             save_data = load_save(i)
 
             if save_data:
-                label = f"Slot {i} | Geld: {save_data.get('money','')}€ | {save_data.get('timestamp', '')}"
+                label = f"Slot {i} | Geld: {save_data.get('money', '')}€ | {save_data.get('timestamp', '')}"
             else:
                 label = f"Slot {i} - Neu starten"
 
@@ -100,9 +101,46 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
 
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
-    Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png")
-    Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     pygame.display.set_caption("Play Screen")
+
+    # Wasser laden und optimieren
+    wasser_gesamt = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Water.png").convert_alpha()
+
+    # Dynamische Größenermittlung des Wasserbildes, um "out of surface area" Crash zu verhindern:
+    img_w = wasser_gesamt.get_width()
+    img_h = wasser_gesamt.get_height()
+
+    # Wenn das Bild kleiner als 96x48 ist, nutzen wir die Maximalgröße des Bildes, sonst schneiden wir 96x48 aus
+    water_tile_w = min(96, img_w)
+    water_tile_h = min(48, img_h)
+    wasser_tile = wasser_gesamt.subsurface(pygame.Rect(0, 0, water_tile_w, water_tile_h))
+
+    # Sand laden, optimieren und Größe dynamisch auslesen
+    sand_tile = pygame.image.load("./assets/Sand/new_piskel_5.png").convert()
+    sand_tile_w = sand_tile.get_width()
+    sand_tile_h = sand_tile.get_height()
+
+    # Dimensionen für die vertikale Aufteilung festlegen
+    sand_bloecke_breite = 3  # Wie viele Kacheln Sand nebeneinander?
+    sand_width = sand_bloecke_breite * sand_tile_w  # Nutzt die echte Breite der Kachel
+    sand_height = gv.SCREEN_HEIGHT  # Volle Höhe von oben nach unten
+
+    water_width = gv.SCREEN_WIDTH - sand_width  # Der restliche Platz rechts auf dem Bildschirm
+    water_height = gv.SCREEN_HEIGHT
+
+    # Sand-Fläche vorrendern (Links)
+    sand_surface = pygame.Surface((sand_width, sand_height))
+    for y in range(0, sand_height, sand_tile_h):
+        for x in range(0, sand_width, sand_tile_w):
+            sand_surface.blit(sand_tile, (x, y))
+
+    # Wasser-Fläche vorrendern (Rechter Rest)
+    water_surface = pygame.Surface((water_width, water_height))
+    for y in range(0, water_height, water_tile_h):
+        # "+ water_tile_w" sorgt dafür, dass das Wasser rechts lückenlos kachelt
+        for x in range(0, water_width + water_tile_w, water_tile_w):
+            water_surface.blit(wasser_tile, (x, y))
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -113,7 +151,13 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     print("Main Menu!")
                     return GameScreens.MAIN
 
-        screen.blit(Hintergrund, Hintergrund_rect)
+        # Screen mit schwarz füllen (als Basis)
+        screen.fill((0, 0, 0))
+
+        # Die beiden großen vorbereiteten Flächen nebeneinander zeichnen
+        screen.blit(sand_surface, (0, 0))  # Sand startet ganz links bei X=0
+        screen.blit(water_surface, (sand_width, 0))  # Wasser startet exakt da, wo der Sand aufhört
+
         pygame.display.flip()
         clock.tick(gv.FPS)
 
