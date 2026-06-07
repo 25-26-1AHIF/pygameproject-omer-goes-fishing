@@ -1,6 +1,8 @@
 import pygame
 from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
+from inventar import Inventory
+from angelsystem import FishingSystem
 from save_manager import load_save, delete_save, save_game
 
 
@@ -104,78 +106,68 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Play Screen")
 
     # =========================================================================
-    # EINSTELLUNGEN FÜR DIE GRÖSSE UND POSITION
+    # SYSTEM INITIALISIERUNG
     # =========================================================================
-    TARGET_BLOCK_SIZE = 96  # Größe eines Quadrats
-    bloecke_hoch = 1  # Nur 1 Reihe am untersten Rand
-    sand_bloecke_breite = 3  # Wie viele Blöcke Sand sollen links sein
-    # =========================================================================
+    inventory = Inventory()
+    fishing_system = FishingSystem(inventory)
 
-    # 1. Wasser laden (die komplette Textur nutzen, um Zerschneiden zu verhindern)
+    # Hintergrund laden & skalieren
+    Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
+    bg_w, bg_h = Hintergrund_raw.get_size()
+    scale_factor_bg = max(gv.SCREEN_WIDTH / bg_w, gv.SCREEN_HEIGHT / bg_h)
+    new_bg_w = int(bg_w * scale_factor_bg)
+    new_bg_h = int(bg_h * scale_factor_bg)
+    Hintergrund = pygame.transform.scale(Hintergrund_raw, (new_bg_w, new_bg_h))
+    Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+
+    TARGET_BLOCK_SIZE = 96
+    bloecke_hoch = 1
+    sand_bloecke_breite = 3
+
     wasser_tile_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Water.png").convert_alpha()
     water_tile_w = wasser_tile_raw.get_width()
     water_tile_h = wasser_tile_raw.get_height()
-
-    # Breite wird dynamisch berechnet, um Verzerrung zu verhindern
     wasser_scaled_h = TARGET_BLOCK_SIZE
     wasser_scaled_w = int(water_tile_w * (wasser_scaled_h / water_tile_h))
     wasser_tile = pygame.transform.scale(wasser_tile_raw, (wasser_scaled_w, wasser_scaled_h))
 
-    # 2. Sand laden und vergrößern
     sand_tile_raw = pygame.image.load("./assets/Sand/new_piskel_5.png").convert()
     sand_tile = pygame.transform.scale(sand_tile_raw, (TARGET_BLOCK_SIZE, TARGET_BLOCK_SIZE))
 
-    # 3. Dimensionen für den unteren Rand berechnen
     bereich_height = bloecke_hoch * TARGET_BLOCK_SIZE
     y_position_am_boden = gv.SCREEN_HEIGHT - bereich_height
-
     sand_width = sand_bloecke_breite * TARGET_BLOCK_SIZE
     water_width = gv.SCREEN_WIDTH - sand_width
 
-    # 4. Sand-Fläche vorrendern (Links am Boden)
-    sand_surface = pygame.Surface((sand_width, bereich_height))
+    sand_surface = pygame.Surface((sand_width, bereich_height), pygame.SRCALPHA)
     for y in range(0, bereich_height, TARGET_BLOCK_SIZE):
         for x in range(0, sand_width, TARGET_BLOCK_SIZE):
             sand_surface.blit(sand_tile, (x, y))
 
-    # 5. Wasser-Fläche vorrendern (Rechts daneben)
-    water_surface = pygame.Surface((water_width, bereich_height))
+    water_surface = pygame.Surface((water_width, bereich_height + 2), pygame.SRCALPHA)
     for y in range(0, bereich_height, wasser_scaled_h):
         for x in range(0, water_width + wasser_scaled_w, wasser_scaled_w):
             water_surface.blit(wasser_tile, (x, y))
 
-    # =========================================================================
-    # ENTITIES LADEN, SKALIEREN & PERFEKT POSITIONIEREN
-    # =========================================================================
     SCALE_FACTOR = 2.5
-
-    # Boot komplett laden und vergrößern
     boot_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Boat.png").convert_alpha()
     boot_w = int(boot_raw.get_width() * SCALE_FACTOR)
     boot_h = int(boot_raw.get_height() * SCALE_FACTOR)
     boot_img = pygame.transform.scale(boot_raw, (boot_w, boot_h))
 
-    # Fischer laden: Wir schneiden exakt unter der Hüfte ab (Höhe 28px).
     fischer_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_walk.png").convert_alpha()
     fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 28))
-
     fischer_w = int(fischer_ganz_raw.get_width() * SCALE_FACTOR)
     fischer_h = int(fischer_ganz_raw.get_height() * SCALE_FACTOR)
     fischer_img = pygame.transform.scale(fischer_ganz_raw, (fischer_w, fischer_h))
 
-    # Positionen & Bewegung auf dem Wasser einrichten
-    boat_y = y_position_am_boden - int(12 * SCALE_FACTOR)
+    boat_y = y_position_am_boden - int(12 * SCALE_FACTOR) - 1
     player_x = sand_width + 20
     player_speed = 5
-
-    # Bewegungsgrenzen
     min_x = sand_width
     max_x = gv.SCREEN_WIDTH - boot_img.get_width()
-
-    # Offsets für den Fischer
     player_x_offset = int(8 * SCALE_FACTOR)
     player_y_offset = int(-15 * SCALE_FACTOR)
-    # =========================================================================
 
     while True:
         for event in pygame.event.get():
@@ -185,35 +177,65 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 if event.key == pygame.K_ESCAPE:
                     return GameScreens.MAIN
 
-        # --- BEWEGUNG STEUERUNG (A / D & Pfeiltasten) ---
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            player_x -= player_speed
-        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            player_x += player_speed
+            # Übergibt Events an das Angelsystem (für den einmaligen Druck von SPACE)
+            fishing_system.handle_event(event)
 
-        # Grenzen einhalten
-        if player_x < min_x:
-            player_x = min_x
+        # --- BEWEGUNG & SELLING STEUERUNG ---
+        keys = pygame.key.get_pressed()
+
+        # Boot darf sich im Minigame nicht bewegen, damit man sich konzentrieren kann
+        if fishing_system.state != "MINIGAME":
+            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
+                player_x -= player_speed
+            if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                player_x += player_speed
+
+        # Grenzen einhalten (Erlaubt dem Boot jetzt ganz links an den Sand heranzufahren!)
+        if player_x < sand_width - 40:
+            player_x = sand_width - 40
         if player_x > max_x:
             player_x = max_x
 
-        # Screen leeren
+        # Verkaufen, wenn man am Sand steht und 'E' drückt
+        if player_x <= sand_width and keys[pygame.K_e]:
+            inventory.sell_all_fish()
+
+        # Update des Angelsystems aufrufen
+        fishing_system.update()
+
+        # --- RENDERING ---
         screen.fill((0, 0, 0))
-
-        # 6. Hintergründe zeichnen
+        screen.blit(Hintergrund, Hintergrund_rect)
         screen.blit(sand_surface, (0, y_position_am_boden))
-        screen.blit(water_surface, (sand_width, y_position_am_boden))
+        screen.blit(water_surface, (sand_width, y_position_am_boden - 1))
 
-        # =========================================================================
-        # RENDERING: ERST FISCHER, DANN BOOT DARÜBER
-        # =========================================================================
-        # 1. Den abgeschnittenen Fischer zeichnen
+        # Fischer und Boot zeichnen
         screen.blit(fischer_img, (player_x + player_x_offset, boat_y + player_y_offset))
-
-        # 2. Das Boot DARÜBER zeichnen. Verdeckt die Schnittkante des Fischers perfekt!
         screen.blit(boot_img, (player_x, boat_y))
+
+        # Angelsystem UI zeichnen
+        fishing_system.draw(screen)
+
         # =========================================================================
+        # LIVE INTERFACE (GELD & INVENTAR ANZEIGEN)
+        # =========================================================================
+        slot = getattr(gv, 'current_slot', 1)
+        save_data = load_save(slot) or {"money": 0}
+
+        # Geldanzeige oben links
+        money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€", True, "white")
+        screen.blit(money_txt, (20, 20))
+
+        # Inventaranzeige direkt darunter
+        inv_list = [f"{count}x {fish}" for fish, count in inventory.content.items()]
+        inv_string = ", ".join(inv_list) if inv_list else "Leer"
+        inv_txt = gv.FONT_MIDDLE.render(f"Inventar: {inv_string}", True, (200, 200, 200))
+        screen.blit(inv_txt, (20, 55))
+
+        # Verkaufshinweis einblenden, wenn das Boot nah genug am Sand ist
+        if player_x <= sand_width:
+            shop_txt = gv.FONT_MIDDLE.render("Drücke 'E' zum Fische verkaufen", True, (255, 255, 100))
+            screen.blit(shop_txt, (gv.SCREEN_WIDTH // 2 - 150, 110))
 
         pygame.display.flip()
         clock.tick(gv.FPS)
