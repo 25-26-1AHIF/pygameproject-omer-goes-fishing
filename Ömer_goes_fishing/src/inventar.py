@@ -4,11 +4,11 @@ from save_manager import save_game, load_save
 
 # Eine Liste aller Fischarten mit ihren Verkaufspreisen und Schwierigkeitsgraden für das Minigame
 FISH_TYPES = {
-    "Hering": {"price": 15, "difficulty": 1.0},
-    "Makrele": {"price": 25, "difficulty": 1.2},
-    "Lachs": {"price": 50, "difficulty": 1.6},
-    "Thunfisch": {"price": 95, "difficulty": 2.2},
-    "Goldfisch": {"price": 200, "difficulty": 2.8}
+    "Hering": {"price": 15, "difficulty": 1.0, "colour": "grey"},
+    "Makrele": {"price": 25, "difficulty": 1.2, "colour": "green"},
+    "Lachs": {"price": 50, "difficulty": 1.6, "colour": "blue"},
+    "Thunfisch": {"price": 95, "difficulty": 2.2, "colour": "purple"},
+    "Goldfisch": {"price": 200, "difficulty": 2.8, "colour": "yellow"},
 }
 
 

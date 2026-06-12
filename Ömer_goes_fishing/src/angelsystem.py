@@ -83,7 +83,7 @@ class FishingSystem:
         if self.player_y in (0, self.ui_height - self.bar_height):
             self.player_vel = 0  # Am Rand abbremsen
 
-        # 2. KI-Fisch-Bewegung
+        # 2. Fisch-Bewegung
         self.fish_move_timer -= 1
         if self.fish_move_timer <= 0:
             self.fish_target_y = random.randint(10, self.ui_height - 15)
@@ -123,7 +123,7 @@ class FishingSystem:
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
             screen.blit(txt, draw_rect)
         elif self.state == "RESULT":
-            color = (50, 255, 50) if "gefangen" in self.result_text else (255, 50, 50)
+            color = FISH_TYPES[self.current_fish]["colour"] if "gefangen" in self.result_text else (255, 50, 50)
             txt = gv.FONT_BIG.render(self.result_text, True, color)
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
             screen.blit(txt, draw_rect)
@@ -148,5 +148,5 @@ class FishingSystem:
             pygame.draw.rect(screen, "white", (px, self.ui_y, 12, self.ui_height), 1)
 
             # Info-Text
-            lbl = gv.FONT_MIDDLE.render(f"Fisch: {self.current_fish}", True, "white")
-            screen.blit(lbl, (self.ui_x - 140, self.ui_y - 30))
+            lbl = gv.FONT_MIDDLE.render(f"Fisch: {self.current_fish}", True, FISH_TYPES[self.current_fish]["colour"])
+            screen.blit(lbl, (self.ui_x - 65, self.ui_y - 45))
