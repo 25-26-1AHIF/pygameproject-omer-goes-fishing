@@ -111,6 +111,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
     # Hintergrundbild laden und anpassen
     # Größe des Hintergrunds ermitteln
+    Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert() #TODO
     Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
     bg_w, bg_h = Hintergrund_raw.get_size()
     scale_factor_bg = max(gv.SCREEN_WIDTH / bg_w, gv.SCREEN_HEIGHT / bg_h)
