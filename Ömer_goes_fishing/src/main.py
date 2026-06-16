@@ -111,7 +111,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
     # Hintergrundbild laden und anpassen
     # Größe des Hintergrunds ermitteln
-    Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert() #TODO
+    Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert()
     Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
     bg_w, bg_h = Hintergrund_raw.get_size()
     scale_factor_bg = max(gv.SCREEN_WIDTH / bg_w, gv.SCREEN_HEIGHT / bg_h)
@@ -223,7 +223,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         if fishing_system.state != "MINIGAME":
             if keys[pygame.K_a] or keys[pygame.K_LEFT] or keys[pygame.K_d] or keys[pygame.K_RIGHT]:
                 animation_counter += 1
-                if animation_counter >= 8:  # Langsamer (war 5)
+                if animation_counter >= 9: # Schnelligkeit
                     current_frame = (current_frame + 1) % len(fischer_frames)
                     animation_counter = 0
             else:
