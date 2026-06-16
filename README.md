@@ -43,6 +43,7 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 ## ⭐ Nice-to-Haves
 
+- [x] Animationen
 - [ ] Zweite Welt
 - [ ] Sounds
 - [ ] Haustiere
