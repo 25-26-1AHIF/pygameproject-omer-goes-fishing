@@ -12,6 +12,8 @@ class FishingSystem:
         self.current_fish = None
         self.result_text = ""
 
+        self.warning_timer = 0
+
         # UI Layout (Rechte Bildschirmseite)
         self.ui_x = gv.SCREEN_WIDTH - 120
         self.ui_y = 150
@@ -29,15 +31,23 @@ class FishingSystem:
         self.fish_move_timer = 0
         self.progress = 30.0
 
-    def handle_event(self, event):
+    def handle_event(self, event, is_moving=False):
         """Verarbeitet den Tastendruck für SPACE."""
         if event.type != pygame.KEYDOWN or event.key != pygame.K_SPACE:
             return
 
         if self.state == "IDLE":
+            # Wenn das Boot sich bewegt, darf nicht geworfen werden
+            if is_moving:
+                self.warning_timer = 60  # 1 Sekunde bei 60 FPS
+                return
+
             self.state = "WAITING"
             self.timer = random.randint(120, 300)  # 2 bis 5 Sekunden bei 60 FPS
             print("Köder geworfen... Warten auf Biss...")
+
+        elif self.state == "WAITING":
+            self._set_result("Eingeholt!", 50)  # Zeigt das Einholen für 1 Sekunde (60 Frames) an
 
         elif self.state == "BITE":
             self.state = "MINIGAME"
@@ -56,6 +66,9 @@ class FishingSystem:
 
     def update(self):
         """Aktualisiert die Logik des Angelsystems pro Frame."""
+        if self.warning_timer > 0:
+            self.warning_timer -= 1
+
         self.timer -= 1
 
         if self.state == "WAITING" and self.timer <= 0:
@@ -113,6 +126,12 @@ class FishingSystem:
 
     def draw(self, screen):
         """Zeigt die grafischen Elemente des Angelsystems auf dem Bildschirm."""
+
+        if self.warning_timer > 0:
+            warn_txt = gv.FONT_BIG.render("Du musst stehen bleiben zum Angeln!", True, (255, 75, 75))
+            warn_rect = warn_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 3))
+            screen.blit(warn_txt, warn_rect)
+
         # Text-Overlays zeichnen
         if self.state == "WAITING":
             txt = gv.FONT_MIDDLE.render("Köder im Wasser... Warten...", True, "white")

@@ -102,15 +102,12 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         pygame.display.flip()
         clock.tick(gv.FPS)
 
-
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Play Screen")
 
     inventory = Inventory()
     fishing_system = FishingSystem(inventory)
 
-    # Hintergrundbild laden und anpassen
-    # Größe des Hintergrunds ermitteln
     Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert()
     Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
     bg_w, bg_h = Hintergrund_raw.get_size()
@@ -155,27 +152,44 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     boot_h = int(boot_raw.get_height() * SCALE_FACTOR)
     boot_img = pygame.transform.scale(boot_raw, (boot_w, boot_h))
 
-    fischer_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_walk.png").convert_alpha()
-    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
-    fischer_w = int(fischer_ganz_raw.get_width() * SCALE_FACTOR)
-    fischer_h = int(fischer_ganz_raw.get_height() * SCALE_FACTOR)
-    fischer_img = pygame.transform.scale(fischer_ganz_raw, (fischer_w, fischer_h))
 
     player_x_offset = int(18 * SCALE_FACTOR)
     player_y_offset = int(-25 * SCALE_FACTOR)
 
-    # Animation Setup für Row-Animation
+    # --- ANIMATION SETUP ---
+    frame_width, frame_height = 48, 48
+
+    # 1. Row/Walk Animation (Fahren)
     fischer_row_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_row.png").convert_alpha()
-    fischer_frames = []
-    frame_width = 48
-    frame_height = 48
-    for i in range(4):  # 4 Frames
+    fischer_row_frames = []
+    for i in range(4):
         frame = fischer_row_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
-        frame_scaled = pygame.transform.scale(frame, (fischer_w, fischer_h))
-        fischer_frames.append(frame_scaled)
+        fischer_row_frames.append(pygame.transform.scale(frame, (int(frame_width * SCALE_FACTOR), int(frame_height * SCALE_FACTOR))))
+
+    # 2. Idle Animation (Stehen ohne Angeln)
+    fischer_idle_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_idle.png").convert_alpha()
+    fischer_idle_frames = []
+    for i in range(4):
+        frame = fischer_idle_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+        fischer_idle_frames.append(pygame.transform.scale(frame, (int(frame_width * SCALE_FACTOR), int(frame_height * SCALE_FACTOR))))
+
+    # 3. Fish Animation (Köder im Wasser / Minigame läuft)
+    fischer_fish_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_fish.png").convert_alpha()
+    fischer_fish_frames = []
+    for i in range(4):
+        frame = fischer_fish_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+        fischer_fish_frames.append(pygame.transform.scale(frame, (int(frame_width * SCALE_FACTOR), int(frame_height * SCALE_FACTOR))))
+
+    # 4. Hook Animation (Ergebnis / Einholen)
+    fischer_hook_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_hook.png").convert_alpha()
+    fischer_hook_frames = []
+    for i in range(6):
+        frame = fischer_hook_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+        fischer_hook_frames.append(pygame.transform.scale(frame, (int(frame_width * SCALE_FACTOR), int(frame_height * SCALE_FACTOR))))
 
     current_frame = 0
     animation_counter = 0
+    last_state = "IDLE"  # Hilfsvariable, um Zustandswechsel zu tracken
 
     boat_y = y_position_am_boden - int(12 * SCALE_FACTOR) - 1
     player_x = sand_width + 20
@@ -183,33 +197,46 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     max_x = gv.SCREEN_WIDTH - boot_img.get_width()
     player_direction = 1  # 1 = rechts, -1 = links
 
-
     while True:
+        # Bei einem neuen Statuswechsel setzen wir den Frame-Zähler zurück
+        if fishing_system.state != last_state:
+            current_frame = 0
+            animation_counter = 0
+            last_state = fishing_system.state
+
+        # 1. Alle Events abarbeiten
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return GameScreens.MAIN
+                    return GameScreens.SAVE_SLOTS
 
-            fishing_system.handle_event(event)
+            current_keys = pygame.key.get_pressed()
+            is_moving_now = (current_keys[pygame.K_a] or current_keys[pygame.K_LEFT] or
+                             current_keys[pygame.K_d] or current_keys[pygame.K_RIGHT])
+
+            fishing_system.handle_event(event, is_moving_now)
 
         keys = pygame.key.get_pressed()
 
-        # Geschwindigkeit erhöhen, wenn Shift gedrückt ist
-        # Normale Geschwindigkeit, wenn Shift nicht gedrückt ist
         if keys[pygame.K_LSHIFT]:
             player_speed = 9
         else:
             player_speed = 5
 
-        if fishing_system.state != "MINIGAME":
+        moved_this_frame = False
+
+        # Bewegung nur erlauben, wenn die Angel NICHT im Wasser ist
+        if fishing_system.state == "IDLE":
             if keys[pygame.K_a] or keys[pygame.K_LEFT]:
                 player_x -= player_speed
-                player_direction = -1  # Nach links schauen
+                player_direction = -1
+                moved_this_frame = True
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
                 player_x += player_speed
-                player_direction = 1  # Nach rechts schauen
+                player_direction = 1
+                moved_this_frame = True
 
         if player_x < sand_width - 8:
             player_x = sand_width - 8
@@ -219,47 +246,66 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         if player_x <= sand_width and keys[pygame.K_e]:
             inventory.sell_all_fish()
 
-        # Animation Update
-        if fishing_system.state != "MINIGAME":
-            if keys[pygame.K_a] or keys[pygame.K_LEFT] or keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-                animation_counter += 1
-                if animation_counter >= 9: # Schnelligkeit
-                    current_frame = (current_frame + 1) % len(fischer_frames)
+        # --- DYNAMISCHES ANIMATION UPDATE ---
+        animation_counter += 1
+
+        if fishing_system.state == "IDLE":
+            if moved_this_frame:
+                if animation_counter >= 9:
+                    current_frame = (current_frame + 1) % len(fischer_row_frames)
                     animation_counter = 0
+                active_frames = fischer_row_frames
             else:
-                current_frame = 0  # Idle frame
+                if animation_counter >= 12:
+                    current_frame = (current_frame + 1) % len(fischer_idle_frames)
+                    animation_counter = 0
+                active_frames = fischer_idle_frames
+
+        elif fishing_system.state in ("WAITING", "BITE", "MINIGAME"):
+            if animation_counter >= 12:
+                current_frame = (current_frame + 1) % len(fischer_fish_frames)
+                animation_counter = 0
+            active_frames = fischer_fish_frames
+
+        elif fishing_system.state == "RESULT":
+            # NEU: Hook-Animation läuft nur genau EINMAL bis zum letzten Frame (Index 5) und bleibt dort stehen
+            if current_frame < len(fischer_hook_frames) - 1:
+                if animation_counter >= 8:  # Geschwindigkeit der Bewegung
+                    current_frame += 1
+                    animation_counter = 0
+            active_frames = fischer_hook_frames
+
+        if current_frame >= len(active_frames):
+            current_frame = 0
 
         fishing_system.update()
 
         screen.fill((0, 0, 0))
         screen.blit(Hintergrund, Hintergrund_rect)
 
-        # Fishing Hut im Hintergrund zeichnen (HINTER Sand und Wasser)
         fishing_hut_scaled = pygame.transform.scale(Fishing_hut_raw, (int(Fishing_hut_raw.get_width() * 2), int(Fishing_hut_raw.get_height() * 2)))
         screen.blit(fishing_hut_scaled, (sand_width - 246, y_position_am_boden + TARGET_BLOCK_SIZE - fishing_hut_scaled.get_height() - 20))
 
         screen.blit(sand_surface, (0, y_position_am_boden))
         screen.blit(water_surface, (sand_width, y_position_am_boden - 1))
 
-        # Gelbe Interaktionslinie beim Boot-Spawn (dünne Linie, 70% transparent)
         interaction_line = pygame.Surface((140, 10), pygame.SRCALPHA)
         pygame.draw.rect(interaction_line, (255, 255, 0, 76), interaction_line.get_rect(), 0)
         screen.blit(interaction_line, (sand_width, y_position_am_boden))
 
-        # Fischer und Boot VOR dem Fishing Hut zeichnen
         pygame.draw.rect(screen, (255, 255, 100), (0, y_position_am_boden, sand_width, bereich_height), 3)
 
+        # Boot zeichnen
         screen.blit(boot_img, (player_x, boat_y))
 
-        # Fischer mit Flip je nach Richtung zeichnen
-        fischer_display = pygame.transform.flip(fischer_frames[current_frame], player_direction == -1, False)
-        # Offset anpassen je nach Richtung - weniger heftig nach rechts
+        # Fischer rendern
+        fischer_display = pygame.transform.flip(active_frames[current_frame], player_direction == -1, False)
         offset_x = int(player_x_offset * 0.1) if player_direction == -1 else player_x_offset
         screen.blit(fischer_display, (player_x + offset_x, boat_y + player_y_offset))
 
         fishing_system.draw(screen)
 
-        # Aktuellen Speicherstand auslesen
+        # UI & Texte rendern
         slot = gv.current_slot
         save_data = load_save(slot)
         if save_data is None:
