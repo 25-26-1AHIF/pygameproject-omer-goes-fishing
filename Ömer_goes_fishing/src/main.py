@@ -229,15 +229,22 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         # Bewegung nur erlauben, wenn die Angel NICHT im Wasser ist
         if fishing_system.state == "IDLE":
-            if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-                player_x -= player_speed
-                player_direction = -1
-                moved_this_frame = True
-            if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-                player_x += player_speed
-                player_direction = 1
-                moved_this_frame = True
+            # 1. Prüfen, ob beide Tasten gleichzeitig gedrückt werden
+            if not ((keys[pygame.K_a] or keys[pygame.K_LEFT]) and (keys[pygame.K_d] or keys[pygame.K_RIGHT])):
 
+                # 2. Nur nach links bewegen & animieren, wenn wir NICHT am Sand-Rand stehen
+                if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and player_x > sand_width - 8:
+                    player_x -= player_speed
+                    player_direction = -1
+                    moved_this_frame = True
+
+                # 3. Nur nach rechts bewegen & animieren, wenn wir NICHT am Bildschirm-Rand stehen
+                if (keys[pygame.K_d] or keys[pygame.K_RIGHT]) and player_x < max_x:
+                    player_x += player_speed
+                    player_direction = 1
+                    moved_this_frame = True
+
+        # Grenzen einhalten
         if player_x < sand_width - 8:
             player_x = sand_width - 8
         if player_x > max_x:
@@ -248,6 +255,8 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         # --- DYNAMISCHES ANIMATION UPDATE ---
         animation_counter += 1
+
+        both_keys_pressed = (keys[pygame.K_a] or keys[pygame.K_LEFT]) and (keys[pygame.K_d] or keys[pygame.K_RIGHT])
 
         if fishing_system.state == "IDLE":
             if moved_this_frame:
@@ -268,7 +277,6 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             active_frames = fischer_fish_frames
 
         elif fishing_system.state == "RESULT":
-            # NEU: Hook-Animation läuft nur genau EINMAL bis zum letzten Frame (Index 5) und bleibt dort stehen
             if current_frame < len(fischer_hook_frames) - 1:
                 if animation_counter >= 8:  # Geschwindigkeit der Bewegung
                     current_frame += 1
