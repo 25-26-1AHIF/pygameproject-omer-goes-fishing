@@ -156,18 +156,33 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     boot_img = pygame.transform.scale(boot_raw, (boot_w, boot_h))
 
     fischer_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_walk.png").convert_alpha()
-    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 38))
+    fischer_ganz_raw = fischer_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
     fischer_w = int(fischer_ganz_raw.get_width() * SCALE_FACTOR)
     fischer_h = int(fischer_ganz_raw.get_height() * SCALE_FACTOR)
     fischer_img = pygame.transform.scale(fischer_ganz_raw, (fischer_w, fischer_h))
+
+    player_x_offset = int(18 * SCALE_FACTOR)
+    player_y_offset = int(-25 * SCALE_FACTOR)
+
+    # Animation Setup für Row-Animation
+    fischer_row_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_row.png").convert_alpha()
+    fischer_frames = []
+    frame_width = 48
+    frame_height = 48
+    for i in range(4):  # 4 Frames
+        frame = fischer_row_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
+        frame_scaled = pygame.transform.scale(frame, (fischer_w, fischer_h))
+        fischer_frames.append(frame_scaled)
+
+    current_frame = 0
+    animation_counter = 0
 
     boat_y = y_position_am_boden - int(12 * SCALE_FACTOR) - 1
     player_x = sand_width + 20
     player_speed = 5
     max_x = gv.SCREEN_WIDTH - boot_img.get_width()
+    player_direction = 1  # 1 = rechts, -1 = links
 
-    player_x_offset = int(18 * SCALE_FACTOR)
-    player_y_offset = int(-30 * SCALE_FACTOR)
 
     while True:
         for event in pygame.event.get():
@@ -191,26 +206,56 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         if fishing_system.state != "MINIGAME":
             if keys[pygame.K_a] or keys[pygame.K_LEFT]:
                 player_x -= player_speed
+                player_direction = -1  # Nach links schauen
             if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
                 player_x += player_speed
+                player_direction = 1  # Nach rechts schauen
 
-        if player_x < sand_width - 40:
-            player_x = sand_width - 40
+        if player_x < sand_width - 8:
+            player_x = sand_width - 8
         if player_x > max_x:
             player_x = max_x
 
         if player_x <= sand_width and keys[pygame.K_e]:
             inventory.sell_all_fish()
 
+        # Animation Update
+        if fishing_system.state != "MINIGAME":
+            if keys[pygame.K_a] or keys[pygame.K_LEFT] or keys[pygame.K_d] or keys[pygame.K_RIGHT]:
+                animation_counter += 1
+                if animation_counter >= 8:  # Langsamer (war 5)
+                    current_frame = (current_frame + 1) % len(fischer_frames)
+                    animation_counter = 0
+            else:
+                current_frame = 0  # Idle frame
+
         fishing_system.update()
 
         screen.fill((0, 0, 0))
         screen.blit(Hintergrund, Hintergrund_rect)
+
+        # Fishing Hut im Hintergrund zeichnen (HINTER Sand und Wasser)
+        fishing_hut_scaled = pygame.transform.scale(Fishing_hut_raw, (int(Fishing_hut_raw.get_width() * 2), int(Fishing_hut_raw.get_height() * 2)))
+        screen.blit(fishing_hut_scaled, (sand_width - 246, y_position_am_boden + TARGET_BLOCK_SIZE - fishing_hut_scaled.get_height() - 20))
+
         screen.blit(sand_surface, (0, y_position_am_boden))
         screen.blit(water_surface, (sand_width, y_position_am_boden - 1))
 
-        screen.blit(fischer_img, (player_x + player_x_offset, boat_y + player_y_offset))
+        # Gelbe Interaktionslinie beim Boot-Spawn (dünne Linie, 70% transparent)
+        interaction_line = pygame.Surface((140, 10), pygame.SRCALPHA)
+        pygame.draw.rect(interaction_line, (255, 255, 0, 76), interaction_line.get_rect(), 0)
+        screen.blit(interaction_line, (sand_width, y_position_am_boden))
+
+        # Fischer und Boot VOR dem Fishing Hut zeichnen
+        pygame.draw.rect(screen, (255, 255, 100), (0, y_position_am_boden, sand_width, bereich_height), 3)
+
         screen.blit(boot_img, (player_x, boat_y))
+
+        # Fischer mit Flip je nach Richtung zeichnen
+        fischer_display = pygame.transform.flip(fischer_frames[current_frame], player_direction == -1, False)
+        # Offset anpassen je nach Richtung - weniger heftig nach rechts
+        offset_x = int(player_x_offset * 0.1) if player_direction == -1 else player_x_offset
+        screen.blit(fischer_display, (player_x + offset_x, boat_y + player_y_offset))
 
         fishing_system.draw(screen)
 
