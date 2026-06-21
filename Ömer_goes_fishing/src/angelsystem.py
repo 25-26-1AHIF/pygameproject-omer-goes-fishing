@@ -1,7 +1,21 @@
 import pygame
 import random
 from game_variables.game_variables import GameVariables as gv
-from inventar import FISH_TYPES
+from inventar import FISH_TYPES, RARITY_INFO
+
+
+def pick_random_fish():
+    """
+    Wählt einen Fisch GEWICHTET nach Rarity aus, statt mit
+    gleicher Wahrscheinlichkeit für alle (wie vorher random.choice).
+
+    Jeder Fisch erbt das 'weight' seiner Rarity aus RARITY_INFO.
+    Seltenere Rarities (z.B. divine) haben ein sehr niedriges Gewicht
+    und werden dadurch sehr viel seltener gezogen als z.B. common.
+    """
+    namen = list(FISH_TYPES.keys())
+    gewichte = [RARITY_INFO[FISH_TYPES[name]["rarity"]]["weight"] for name in namen]
+    return random.choices(namen, weights=gewichte, k=1)[0]
 
 
 class FishingSystem:
@@ -11,8 +25,10 @@ class FishingSystem:
         self.timer = 0
         self.current_fish = None
         self.result_text = ""
+        self.result_colour = "white"
 
         self.warning_timer = 0
+        self.warning_text = ""
 
         # UI Layout (Rechte Bildschirmseite)
         self.ui_x = gv.SCREEN_WIDTH - 120
@@ -37,9 +53,15 @@ class FishingSystem:
             return
 
         if self.state == "IDLE":
-            # Wenn das Boot sich bewegt, darf nicht geworfen werden
             if is_moving:
                 self.warning_timer = 60  # 1 Sekunde bei 60 FPS
+                self.warning_text = "Du musst stehen bleiben zum Angeln!"
+                return
+
+            if self.inventory.total_fish_count() >= self.inventory.MAX_TOTAL_FISH:
+                # Inventar ist voll -> gar nicht erst werfen, keine Zeit verschwenden
+                self.warning_timer = 60
+                self.warning_text = "Inventar voll! Erst verkaufen."
                 return
 
             self.state = "WAITING"
@@ -47,21 +69,23 @@ class FishingSystem:
             print("Köder geworfen... Warten auf Biss...")
 
         elif self.state == "WAITING":
-            self._set_result("Eingeholt!", 50)  # Zeigt das Einholen für 1 Sekunde (60 Frames) an
+            self._set_result("Eingeholt!", (255, 255, 255), 50)
 
         elif self.state == "BITE":
             self.state = "MINIGAME"
-            self.current_fish = random.choice(list(FISH_TYPES.keys()))
+            # Gewichtete Auswahl statt gleichverteilter Zufallsauswahl
+            self.current_fish = pick_random_fish()
             self.progress = 30.0
             self.player_y = self.ui_height - self.bar_height
             self.player_vel = 0.0
             self.fish_y = self.fish_target_y = self.ui_height - 30
-            print(f"Ein {self.current_fish} hat angebissen! Minigame startet.")
+            print(f"Ein {self.current_fish} ({FISH_TYPES[self.current_fish]['rarity']}) hat angebissen! Minigame startet.")
 
-    def _set_result(self, text, duration=120):
+    def _set_result(self, text, colour=(255, 255, 255), duration=120):
         """Hilfsmethode zum Setzen des Status-Ergebnisses."""
         self.state = "RESULT"
         self.result_text = text
+        self.result_colour = colour
         self.timer = duration
 
     def update(self):
@@ -76,7 +100,7 @@ class FishingSystem:
             self.timer = 75  # Spieler hat ca. 1.2 Sekunden Zeit
 
         elif self.state == "BITE" and self.timer <= 0:
-            self._set_result("Entkommen!", 90)
+            self._set_result("Entkommen!", (255, 50, 50), 90)
 
         elif self.state == "MINIGAME":
             self._update_minigame()
@@ -86,7 +110,6 @@ class FishingSystem:
 
     def _update_minigame(self):
         """Interne Logik für das eigentliche Minigame."""
-        # 1. Spieler-Balken Physik
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             self.player_vel += self.lift
 
@@ -94,9 +117,8 @@ class FishingSystem:
         self.player_y = max(0, min(self.player_y + self.player_vel, self.ui_height - self.bar_height))
 
         if self.player_y in (0, self.ui_height - self.bar_height):
-            self.player_vel = 0  # Am Rand abbremsen
+            self.player_vel = 0
 
-        # 2. Fisch-Bewegung
         self.fish_move_timer -= 1
         if self.fish_move_timer <= 0:
             self.fish_target_y = random.randint(10, self.ui_height - 15)
@@ -105,34 +127,35 @@ class FishingSystem:
         diff = FISH_TYPES[self.current_fish]["difficulty"]
         step = 1.8 * diff
 
-        # Sanftes Heranbewegen an das Ziel ohne Übersteuern
         if abs(self.fish_y - self.fish_target_y) <= step:
             self.fish_y = self.fish_target_y
         else:
             self.fish_y += step if self.fish_y < self.fish_target_y else -step
 
-        # 3. Fortschrittsbalken updaten
         if self.player_y <= self.fish_y <= self.player_y + self.bar_height:
             self.progress = min(100.0, self.progress + 0.5)
         else:
             self.progress = max(0.0, self.progress - 0.4)
 
-        # Gewinn- / Verlust-Abfrage
         if self.progress >= 100:
-            self.inventory.add_fish(self.current_fish)
-            self._set_result(f"{self.current_fish} gefangen!")
+            erfolg = self.inventory.add_fish(self.current_fish)
+            fisch_colour = FISH_TYPES[self.current_fish]["colour"]
+            if erfolg:
+                self._set_result(f"{self.current_fish} gefangen!", fisch_colour)
+            else:
+                # Gesamtes Inventar ist voll (globales Limit erreicht)
+                self._set_result("Inventar voll! Erst verkaufen.", (255, 150, 0))
         elif self.progress <= 0:
-            self._set_result("Entkommen!")
+            self._set_result("Entkommen!", (255, 50, 50))
 
     def draw(self, screen):
         """Zeigt die grafischen Elemente des Angelsystems auf dem Bildschirm."""
 
         if self.warning_timer > 0:
-            warn_txt = gv.FONT_BIG.render("Du musst stehen bleiben zum Angeln!", True, (255, 75, 75))
+            warn_txt = gv.FONT_BIG.render(self.warning_text, True, (255, 75, 75))
             warn_rect = warn_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 3))
             screen.blit(warn_txt, warn_rect)
 
-        # Text-Overlays zeichnen
         if self.state == "WAITING":
             txt = gv.FONT_MIDDLE.render("Köder im Wasser... Warten...", True, "white")
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
@@ -142,30 +165,28 @@ class FishingSystem:
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
             screen.blit(txt, draw_rect)
         elif self.state == "RESULT":
-            color = FISH_TYPES[self.current_fish]["colour"] if "gefangen" in self.result_text else (255, 50, 50)
-            txt = gv.FONT_BIG.render(self.result_text, True, color)
+            txt = gv.FONT_BIG.render(self.result_text, True, self.result_colour)
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
             screen.blit(txt, draw_rect)
 
         elif self.state == "MINIGAME":
-            # 1. Hintergrund-Messbalken
             pygame.draw.rect(screen, (40, 40, 40), (self.ui_x, self.ui_y, self.ui_width, self.ui_height))
             pygame.draw.rect(screen, "white", (self.ui_x, self.ui_y, self.ui_width, self.ui_height), 2)
 
-            # 2. Grüner Spieler-Balken
             pygame.draw.rect(screen, (50, 220, 50),
                              (self.ui_x + 3, self.ui_y + int(self.player_y), self.ui_width - 6, self.bar_height))
 
-            # 3. Der Fisch (Oranger Kreis)
             pygame.draw.circle(screen, (255, 120, 0), (self.ui_x + self.ui_width // 2, self.ui_y + int(self.fish_y)), 8)
 
-            # 4. Der Fortschrittsbalken direkt rechts daneben
             prog_height = int((self.progress / 100.0) * self.ui_height)
             px = self.ui_x + self.ui_width + 8
             pygame.draw.rect(screen, (20, 20, 20), (px, self.ui_y, 12, self.ui_height))
             pygame.draw.rect(screen, (255, 180, 0), (px, self.ui_y + self.ui_height - prog_height, 12, prog_height))
             pygame.draw.rect(screen, "white", (px, self.ui_y, 12, self.ui_height), 1)
 
-            # Info-Text
-            lbl = gv.FONT_MIDDLE.render(f"Fisch: {self.current_fish}", True, FISH_TYPES[self.current_fish]["colour"])
+            fisch_daten = FISH_TYPES[self.current_fish]
+            lbl = gv.FONT_MIDDLE.render(f"Fisch: {self.current_fish}", True, fisch_daten["colour"])
             screen.blit(lbl, (self.ui_x - 65, self.ui_y - 45))
+
+            rarity_lbl = gv.FONT_SMALL.render(f"[{fisch_daten['rarity'].upper()}]", True, fisch_daten["colour"])
+            screen.blit(rarity_lbl, (self.ui_x - 65, self.ui_y - 20))
