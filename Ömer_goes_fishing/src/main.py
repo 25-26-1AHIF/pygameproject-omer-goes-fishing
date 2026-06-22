@@ -8,6 +8,11 @@ from save_manager import load_save, delete_save, save_game
 
 
 def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+    """
+    @brief Zeigt und verwaltet die 3 Speicherstände (Slots) zum Laden, Erstellen und Löschen.
+    @param screen Das Spielfenster, auf dem gezeichnet wird.
+    @param clock Die Pygame-Uhr zur Steuerung der Framerate.
+    """
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_5/5.png")
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
     pygame.display.set_caption("Save Slots Screen")
@@ -104,6 +109,11 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         clock.tick(gv.FPS)
 
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+    """
+    @brief Der Haupt-Spielbildschirm. Steuert das Boot, Animationen, Angeln und das Upgrade-Menü.
+    @param screen Das Spielfenster, auf dem gezeichnet wird.
+    @param clock Die Pygame-Uhr zur Steuerung der Framerate.
+    """
     pygame.display.set_caption("Play Screen")
 
     upgrade_manager = UpgradeManager()
@@ -425,6 +435,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
 
 def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
+    """
+    @brief Zeigt den Steuerungsbildschirm mit allen wichtigen Tastaturbelegungen an.
+    @param screen Das Spielfenster, auf dem gezeichnet wird.
+    @param clock Die Pygame-Uhr zur Steuerung der Framerate.
+    """
     pygame.display.set_caption("Controls Screen")
 
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_4/5.png")
@@ -472,6 +487,11 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
 
 def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens:
+    """
+    @brief Zeigt das Hauptmenü mit Logo und Buttons für Start, Controls und Exit.
+    @param screen Das Spielfenster, auf dem gezeichnet wird.
+    @param clock Die Pygame-Uhr zur Steuerung der Framerate.
+    """
     pygame.display.set_caption("Main Screen")
 
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_4/5.png")
@@ -511,6 +531,9 @@ def main_screen(screen: pygame.Surface, clock: pygame.time.Clock) -> GameScreens
 
 
 def main():
+    """
+    @brief Der Haupteinstiegspunkt. Initialisiert das Spiel und verwaltet die Hauptschleife.
+    """
     gv.init()
     screen = pygame.display.set_mode((gv.SCREEN_WIDTH, gv.SCREEN_HEIGHT))
     clock = pygame.time.Clock()
