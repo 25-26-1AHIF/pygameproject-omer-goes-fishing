@@ -23,13 +23,14 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 ## 🕹️ Steuerung
 
-| Taste | Aktion                           |
-|---|----------------------------------|
-| `A` / `D` | Boot nach links / rechts bewegen |
-| `SPACE` | Köder werfen                     |
+| Taste            | Aktion                           |
+|------------------|----------------------------------|
+| `A` / `D`        | Boot nach links / rechts bewegen |
+| `SPACE`          | Köder werfen                     |
 | `SPACE` (halten) | Fisch im Minigame verfolgen      |
-| `Linksklick` | Menü-Interaktion                 |
-| `ESC` | Pausenmenü / Exit                |
+| `E`              | Verkaufen                        |
+| `U`              | Upgrades kaufen                  |
+| `ESC`            | Pausenmenü / Exit                |
 
 ---
 
@@ -37,7 +38,7 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 - [x] Angelsystem (Köder werfen + Minigame)
 - [x] Boot bewegen
-- [ ] Upgrades (Angel, Köder)
+- [x] Upgrades (Angel, Köder)
 - [x] Fische verkaufen
 - [x] Inventar (aktuelle Fische anzeigen)
 
@@ -66,10 +67,12 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 
 ## 🛠️ Upgrades
 
-| Upgrade | Effekt |
-|---|---|
-| Bessere Angel | Minigame wird leichter |
-| Besserer Köder | Fische schneller fangen |
+| Upgrade              | Effekt                |
+|----------------------|-----------------------|
+| Bessere Angel        | Minigame wird leichter|
+| Besserer Köder       | Fische schneller fangen|
+| Verhandlungsgeschick | Bessere Preise beim Verkaufen|
+| Größerer Körb        | Mehr Fische im Inventar|
 
 ---
 

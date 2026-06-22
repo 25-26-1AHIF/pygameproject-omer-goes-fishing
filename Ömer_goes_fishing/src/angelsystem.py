@@ -76,6 +76,9 @@ class FishingSystem:
             # Gewichtete Auswahl statt gleichverteilter Zufallsauswahl
             self.current_fish = pick_random_fish()
             self.progress = 30.0
+            # Balkenhöhe inkl. Bonus durch das 'Bessere Angel'-Upgrade
+            bonus = self.inventory.upgrade_manager.get_minigame_bar_bonus()
+            self.bar_height = 75 + bonus
             self.player_y = self.ui_height - self.bar_height
             self.player_vel = 0.0
             self.fish_y = self.fish_target_y = self.ui_height - 30
@@ -124,7 +127,8 @@ class FishingSystem:
             self.fish_target_y = random.randint(10, self.ui_height - 15)
             self.fish_move_timer = random.randint(30, 60)
 
-        diff = FISH_TYPES[self.current_fish]["difficulty"]
+        reduktion = self.inventory.upgrade_manager.get_minigame_difficulty_reduction()
+        diff = FISH_TYPES[self.current_fish]["difficulty"] * reduktion
         step = 1.8 * diff
 
         if abs(self.fish_y - self.fish_target_y) <= step:

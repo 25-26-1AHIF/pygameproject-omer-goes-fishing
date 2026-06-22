@@ -3,6 +3,7 @@ from game_variables.game_variables import GameVariables as gv
 from game_variables.game_variables import GameScreens
 from inventar import Inventory
 from angelsystem import FishingSystem
+from upgrades import UpgradeManager, UPGRADE_DEFS, MAX_LEVEL
 from save_manager import load_save, delete_save, save_game
 
 
@@ -105,8 +106,13 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     pygame.display.set_caption("Play Screen")
 
-    inventory = Inventory()
+    upgrade_manager = UpgradeManager()
+    inventory = Inventory(upgrade_manager)
     fishing_system = FishingSystem(inventory)
+
+    # Status für das Upgrade-Menü (öffnet sich nur am Sand mit Taste 'U')
+    upgrade_menu_open = False
+    upgrade_keys = list(UPGRADE_DEFS.keys())  # feste Reihenfolge: inventar, minigame, preis
 
     Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert()
     Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
@@ -210,13 +216,35 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return GameScreens.SAVE_SLOTS
+                    if upgrade_menu_open:
+                        upgrade_menu_open = False
+                    else:
+                        return GameScreens.SAVE_SLOTS
+
+                if event.key == pygame.K_u and player_x <= sand_width:
+                    # Menü nur am Sand (Shop-Bereich) öffnen/schließen
+                    upgrade_menu_open = not upgrade_menu_open
+
+            if event.type == pygame.MOUSEBUTTONDOWN and upgrade_menu_open:
+                # Klick auf eine der Upgrade-Zeilen prüfen
+                mouse_x, mouse_y = event.pos
+                for idx, key in enumerate(upgrade_keys):
+                    row_y = 220 + idx * 70
+                    row_rect = pygame.Rect(gv.SCREEN_WIDTH // 2 - 250, row_y - 25, 500, 50)
+                    if row_rect.collidepoint(mouse_x, mouse_y):
+                        save_data_for_buy = load_save(gv.current_slot) or {"money": 0}
+                        aktuelles_geld = save_data_for_buy.get("money", 0)
+                        # purchase() speichert Geld + Upgrade-Level selbst in einem Zug
+                        upgrade_manager.purchase(key, aktuelles_geld)
 
             current_keys = pygame.key.get_pressed()
             is_moving_now = (current_keys[pygame.K_a] or current_keys[pygame.K_LEFT] or
                              current_keys[pygame.K_d] or current_keys[pygame.K_RIGHT])
 
-            fishing_system.handle_event(event, is_moving_now)
+            # Während das Upgrade-Menü offen ist, soll nicht gleichzeitig
+            # geangelt werden können (sonst überschneiden sich die UIs)
+            if not upgrade_menu_open:
+                fishing_system.handle_event(event, is_moving_now)
 
         keys = pygame.key.get_pressed()
 
@@ -227,8 +255,8 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         moved_this_frame = False
 
-        # Bewegung nur erlauben, wenn die Angel NICHT im Wasser ist
-        if fishing_system.state == "IDLE":
+        # Bewegung nur erlauben, wenn die Angel NICHT im Wasser ist UND das Menü zu ist
+        if fishing_system.state == "IDLE" and not upgrade_menu_open:
             # 1. Prüfen, ob beide Tasten gleichzeitig gedrückt werden
             if not ((keys[pygame.K_a] or keys[pygame.K_LEFT]) and (keys[pygame.K_d] or keys[pygame.K_RIGHT])):
 
@@ -250,7 +278,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         if player_x > max_x:
             player_x = max_x
 
-        if player_x <= sand_width and keys[pygame.K_e]:
+        if player_x <= sand_width and keys[pygame.K_e] and not upgrade_menu_open:
             inventory.sell_all_fish()
 
         # --- DYNAMISCHES ANIMATION UPDATE ---
@@ -327,15 +355,68 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             end_rect = end_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
             screen.blit(end_txt, end_rect)
 
+        # Inventar-Anzeige inkl. Füllstand (z.B. "7/10"), damit man sieht,
+        # wie viel Platz noch frei ist, bevor man verkaufen muss.
+        gesamt_fische = inventory.total_fish_count()
+        max_fische = inventory.MAX_TOTAL_FISH
         inv_list = [f"{count}x {fish}" for fish, count in inventory.content.items()]
         inv_string = ", ".join(inv_list) if inv_list else "Leer"
-        inv_txt = gv.FONT_SMALL.render(f"Inventar: {inv_string}", True, (200, 200, 200))
+
+        # Wenn das Inventar voll ist, Anzeige rot einfärben als zusätzlicher Hinweis
+        inv_farbe = (255, 100, 100) if gesamt_fische >= max_fische else (200, 200, 200)
+        inv_txt = gv.FONT_SMALL.render(
+            f"Inventar ({gesamt_fische}/{max_fische}): {inv_string}", True, inv_farbe
+        )
         screen.blit(inv_txt, (20, 55))
 
         if player_x <= sand_width:
-            shop_txt = gv.FONT_SMALL.render("Drücke 'E' zum Fische verkaufen", True, (255, 255, 100))
-            draw_rect = shop_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 12))
+            shop_txt = gv.FONT_SMALL.render("Drücke 'E' zum Verkaufen | 'U' für Upgrades", True, (255, 255, 100))
+            draw_rect = shop_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 16))
             screen.blit(shop_txt, draw_rect)
+
+        # --- UPGRADE-MENÜ ---
+        if upgrade_menu_open:
+            menu_width, menu_height = 560, 340
+            menu_x = gv.SCREEN_WIDTH // 2 - menu_width // 2
+            menu_y = 140
+
+            menu_bg = pygame.Surface((menu_width, menu_height), pygame.SRCALPHA)
+            pygame.draw.rect(menu_bg, (20, 20, 30, 230), menu_bg.get_rect(), border_radius=10)
+            pygame.draw.rect(menu_bg, (255, 255, 255, 255), menu_bg.get_rect(), 2, border_radius=10)
+            screen.blit(menu_bg, (menu_x, menu_y))
+
+            titel_txt = gv.FONT_MIDDLE.render("Upgrades (ESC zum Schließen)", True, "white")
+            screen.blit(titel_txt, (menu_x + 20, menu_y + 15))
+
+            save_data_now = load_save(gv.current_slot) or {"money": 0}
+            aktuelles_geld = save_data_now.get("money", 0)
+
+            for idx, key in enumerate(upgrade_keys):
+                info = UPGRADE_DEFS[key]
+                level = upgrade_manager.get_level(key)
+                row_y = 220 + idx * 70
+
+                if level >= MAX_LEVEL:
+                    preis_text = "MAX"
+                    kann_kaufen = False
+                else:
+                    kosten = upgrade_manager.get_cost(key)
+                    preis_text = f"{kosten}€"
+                    kann_kaufen = aktuelles_geld >= kosten
+
+                zeilen_farbe = (60, 200, 80) if kann_kaufen else (160, 60, 60)
+                row_rect = pygame.Rect(gv.SCREEN_WIDTH // 2 - 250, row_y - 25, 500, 50)
+                pygame.draw.rect(screen, zeilen_farbe, row_rect, 2, border_radius=6)
+
+                name_txt = gv.FONT_SMALL.render(f"{info['name']} (Lvl {level})", True, "white")
+                screen.blit(name_txt, (row_rect.x + 12, row_rect.y + 6))
+
+                beschr_txt = gv.FONT_SMALL.render(info["beschreibung"], True, (200, 200, 200))
+                screen.blit(beschr_txt, (row_rect.x + 12, row_rect.y + 26))
+
+                preis_txt = gv.FONT_MIDDLE.render(preis_text, True, zeilen_farbe)
+                preis_rect = preis_txt.get_rect(midright=(row_rect.right - 15, row_rect.centery))
+                screen.blit(preis_txt, preis_rect)
 
         pygame.display.flip()
         clock.tick(gv.FPS)
@@ -349,16 +430,18 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     Köder_ctrls = gv.FONT_MIDDLE.render("SPACE für Köder werfen", True, "white")
     minigame_ctrls = gv.FONT_MIDDLE.render("Beim Angel Minigame SPACE gedrückt halten zum Verfolgen vom Fisch", True,
                                            "white")
-    interact_ctrl = gv.FONT_MIDDLE.render("Links Klick für Menü Interaktion", True, "white")
+    Verkaufen_ctrl = gv.FONT_MIDDLE.render("E zum Verkaufen (nur am Sand möglich)", True, "white")
+    Upgrades_menu_ctrl = gv.FONT_MIDDLE.render("U für Upgrade Menü (nur am Sand möglich)", True, "white")
     pause_ctrl = gv.FONT_MIDDLE.render("ESC für Pausenmenü / Exit", True, "white")
     x = gv.FONT_BIG.render("X", True, "white")
 
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
-    Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 150))
-    Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 250))
-    minigame_ctrls_rect = minigame_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 350))
-    interact_ctrl_rect = interact_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 450))
-    pause_ctrl_rect = pause_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 550))
+    Upgrades_menu_rect = Upgrades_menu_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 500))
+    Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 100))
+    Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 200))
+    minigame_ctrls_rect = minigame_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 300))
+    interact_ctrl_rect = Verkaufen_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 400))
+    pause_ctrl_rect = pause_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 600))
     x_rect = x.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
     while True:
@@ -376,8 +459,9 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         screen.blit(Boot_ctrls, Boot_ctrls_rect)
         screen.blit(Köder_ctrls, Köder_ctrls_rect)
         screen.blit(minigame_ctrls, minigame_ctrls_rect)
-        screen.blit(interact_ctrl, interact_ctrl_rect)
+        screen.blit(Verkaufen_ctrl, interact_ctrl_rect)
         screen.blit(pause_ctrl, pause_ctrl_rect)
+        screen.blit(Upgrades_menu_ctrl, Upgrades_menu_rect)
         screen.blit(x, x_rect)
         pygame.display.flip()
         clock.tick(gv.FPS)
