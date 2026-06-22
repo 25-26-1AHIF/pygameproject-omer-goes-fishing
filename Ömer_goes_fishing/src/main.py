@@ -329,8 +329,6 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         pygame.draw.rect(interaction_line, (255, 255, 0, 76), interaction_line.get_rect(), 0)
         screen.blit(interaction_line, (sand_width, y_position_am_boden))
 
-        pygame.draw.rect(screen, (255, 255, 100), (0, y_position_am_boden, sand_width, bereich_height), 3)
-
         # Boot zeichnen
         screen.blit(boot_img, (player_x, boat_y))
 
