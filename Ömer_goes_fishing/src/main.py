@@ -402,7 +402,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 row_rect = pygame.Rect(gv.SCREEN_WIDTH // 2 - 250, row_y - 25, 500, 50)
                 pygame.draw.rect(screen, zeilen_farbe, row_rect, 2, border_radius=6)
 
-                name_txt = gv.FONT_SMALL.render(f"{info['name']} (Lvl {level})", True, "white")
+                name_txt = gv.FONT_SMALL.render(f"{info['name']} (Lvl {level} / {MAX_LEVEL})", True, "white")
                 screen.blit(name_txt, (row_rect.x + 12, row_rect.y + 6))
 
                 beschr_txt = gv.FONT_SMALL.render(info["beschreibung"], True, (200, 200, 200))
