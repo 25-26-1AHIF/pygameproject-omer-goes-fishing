@@ -350,10 +350,6 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         money_txt = gv.FONT_MIDDLE.render(f"Geld: {save_data.get('money', 0)}€ / 50.000,--€", True, "white")
         screen.blit(money_txt, (20, 20))
 
-        if save_data["money"] >= 50000:
-            end_txt = gv.FONT_BIG.render("Glückwunsch! Du hast 50.000€ erreicht!", True, "green")
-            end_rect = end_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
-            screen.blit(end_txt, end_rect)
 
         # Inventar-Anzeige inkl. Füllstand (z.B. "7/10"), damit man sieht,
         # wie viel Platz noch frei ist, bevor man verkaufen muss.
@@ -418,6 +414,14 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 preis_rect = preis_txt.get_rect(midright=(row_rect.right - 15, row_rect.centery))
                 screen.blit(preis_txt, preis_rect)
 
+        if save_data["money"] >= 50000:
+            end_txt = gv.FONT_BIG.render("Glückwunsch! Du hast 50.000€ erreicht!", True, "green")
+            end_rect = end_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+            End_Bild = pygame.image.load("./assets/End-Bild.png").convert_alpha()
+            end_bild = End_Bild.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+            screen.blit(End_Bild, end_bild)
+            screen.blit(end_txt, end_rect)
+
         pygame.display.flip()
         clock.tick(gv.FPS)
 
@@ -428,8 +432,7 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     Hintergrund = pygame.image.load("./assets/Hintergründe/Ocean_4/5.png")
     Boot_ctrls = gv.FONT_MIDDLE.render("A/D  für links und rechts bewegen vom Boot", True, "white")
     Köder_ctrls = gv.FONT_MIDDLE.render("SPACE für Köder werfen", True, "white")
-    minigame_ctrls = gv.FONT_MIDDLE.render("Beim Angel Minigame SPACE gedrückt halten zum Verfolgen vom Fisch", True,
-                                           "white")
+    minigame_ctrls = gv.FONT_MIDDLE.render("Beim Angel Minigame SPACE gedrückt halten zum Verfolgen vom Fisch", True, "white")
     Verkaufen_ctrl = gv.FONT_MIDDLE.render("E zum Verkaufen (nur am Sand möglich)", True, "white")
     Upgrades_menu_ctrl = gv.FONT_MIDDLE.render("U für Upgrade Menü (nur am Sand möglich)", True, "white")
     interaction_ctrl = gv.FONT_MIDDLE.render("Links zum interagieren", True, "white")

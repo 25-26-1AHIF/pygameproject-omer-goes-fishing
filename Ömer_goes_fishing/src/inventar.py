@@ -73,7 +73,19 @@ BASE_MAX_TOTAL_FISH = 10
 
 
 class Inventory:
+    """
+    @brief Verwaltet das Fisch-Inventar des Spielers: Bestand, Limit
+           (abhängig von Upgrades), Laden/Speichern und den Verkauf.
+    """
+
     def __init__(self, upgrade_manager=None):
+        """
+        @brief Initialisiert ein leeres Inventar und lädt den gespeicherten
+               Bestand aus dem aktuellen Save-Slot.
+        @param upgrade_manager UpgradeManager-Instanz für Limit- und
+                                Preis-Berechnungen. Falls None, wird intern
+                                ein eigener UpgradeManager erstellt.
+        """
         # Das Inventar ist am Anfang ein leeres Wörterbuch (Dictionary)
         self.content = {}
         # Der UpgradeManager wird gebraucht, um das aktuelle Inventar-Limit
@@ -86,13 +98,16 @@ class Inventory:
     @property
     def MAX_TOTAL_FISH(self):
         """
-        Aktuelles Inventar-Limit: Basiswert + Bonus durch das
-        'Größerer Korb'-Upgrade (siehe upgrades.py).
+        @brief Aktuelles Inventar-Limit: Basiswert + Bonus durch das
+               'Größerer Korb'-Upgrade (siehe upgrades.py).
+        @return Maximal erlaubte Gesamtanzahl an Fischen (int).
         """
         return BASE_MAX_TOTAL_FISH + self.upgrade_manager.get_inventory_bonus()
 
     def load_from_save(self):
-        """Lädt die gespeicherten Fische aus dem aktuell aktiven Save-Slot."""
+        """
+        @brief Lädt die gespeicherten Fische aus dem aktuell aktiven Save-Slot.
+        """
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -102,7 +117,9 @@ class Inventory:
             self.content = {}
 
     def save_to_disk(self):
-        """Sichert das aktuelle Inventar permanent in die Save-Datei."""
+        """
+        @brief Sichert das aktuelle Inventar permanent in die Save-Datei.
+        """
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -113,17 +130,21 @@ class Inventory:
         save_game(aktiver_slot, spielstand)
 
     def total_fish_count(self):
-        """Zählt, wie viele Fische insgesamt (über alle Arten) im Inventar sind."""
+        """
+        @brief Zählt, wie viele Fische insgesamt (über alle Arten) im
+               Inventar sind.
+        @return Gesamtanzahl aller Fische (int).
+        """
         return sum(self.content.values())
 
     def add_fish(self, fisch_name):
         """
-        Fügt einen gefangenen Fisch hinzu, sofern das GLOBALE Limit
-        (MAX_TOTAL_FISH, über alle Fischarten zusammen) noch nicht
-        erreicht ist, und speichert sofort.
-
-        Gibt True zurück, wenn der Fisch ins Inventar passte,
-        False, wenn das Inventar insgesamt bereits voll ist.
+        @brief Fügt einen gefangenen Fisch hinzu, sofern das GLOBALE Limit
+               (MAX_TOTAL_FISH, über alle Fischarten zusammen) noch nicht
+               erreicht ist, und speichert sofort.
+        @param fisch_name Name der Fischart (muss in FISH_TYPES vorkommen).
+        @return True, wenn der Fisch ins Inventar passte, False, wenn das
+                Inventar insgesamt bereits voll ist oder der Fisch unbekannt ist.
         """
         if fisch_name not in FISH_TYPES:
             return False
@@ -137,9 +158,12 @@ class Inventory:
         return True
 
     def sell_all_fish(self):
-        """Verkauft alle Fische, schreibt das Geld dem Spielstand gut und leert das Inventar.
-        Der Verkaufspreis wird mit dem 'Verhandlungsgeschick'-Upgrade-Multiplikator
-        hochgerechnet (+8% pro Stufe)."""
+        """
+        @brief Verkauft alle Fische, schreibt das Geld dem Spielstand gut
+               und leert das Inventar. Der Verkaufspreis wird mit dem
+               'Verhandlungsgeschick'-Upgrade-Multiplikator hochgerechnet.
+        @return Gesamter Verdienst in Euro (int), 0 falls das Inventar leer war.
+        """
         gesamter_verdienst = 0
         preis_multiplikator = self.upgrade_manager.get_price_multiplier()
 

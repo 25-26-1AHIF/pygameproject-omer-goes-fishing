@@ -18,25 +18,25 @@ UPGRADE_DEFS = {
         "name": "Größerer Korb",
         "beschreibung": "+2 maximale Fische im Inventar pro Stufe",
         "base_cost": 100,
-        "cost_multiplier": 1.5,  # Jede Stufe kostet das 1.6-fache der vorigen
+        "cost_multiplier": 1.2,  # Jede Stufe kostet das 1.2-fache der vorigen
     },
     "minigame": {
         "name": "Bessere Angel",
         "beschreibung": "Größerer Fangbalken & ruhigerer Fisch pro Stufe",
         "base_cost": 150,
-        "cost_multiplier": 1.5,
+        "cost_multiplier": 1.2,
     },
     "preis": {
         "name": "Verhandlungsgeschick",
         "beschreibung": "+50% Verkaufspreis für alle Fische pro Stufe",
         "base_cost": 200,
-        "cost_multiplier": 1.5,
+        "cost_multiplier": 1.2,
     },
     "koeder": {
         "name": "Besserer Köder",
         "beschreibung": "Höhere Chance auf seltenere Fische pro Stufe",
-        "base_cost": 180,
-        "cost_multiplier": 1.5,
+        "base_cost": 150,
+        "cost_multiplier": 1.2,
     },
 }
 
@@ -46,13 +46,26 @@ MAX_LEVEL = 20
 
 
 class UpgradeManager:
+    """
+    @brief Verwaltet sämtliche Upgrade-Stufen (Inventar, Minigame,
+           Verkaufspreis, Köder), deren Kosten sowie das Laden/Speichern
+           dieser Stufen im aktiven Save-Slot.
+    """
+
     def __init__(self):
+        """
+        @brief Initialisiert alle Upgrade-Stufen mit 0 und lädt
+               anschließend den gespeicherten Stand (falls vorhanden).
+        """
         # levels speichert pro Upgrade-Typ die aktuelle Stufe (0 = noch nicht gekauft)
         self.levels = {key: 0 for key in UPGRADE_DEFS}
         self.load_from_save()
 
     def load_from_save(self):
-        """Lädt die gespeicherten Upgrade-Stufen aus dem aktuell aktiven Save-Slot."""
+        """
+        @brief Lädt die gespeicherten Upgrade-Stufen aus dem aktuell
+               aktiven Save-Slot. Fehlt ein Eintrag, bleibt die Stufe 0.
+        """
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -64,7 +77,10 @@ class UpgradeManager:
             self.levels = {key: 0 for key in UPGRADE_DEFS}
 
     def save_to_disk(self):
-        """Sichert die aktuellen Upgrade-Stufen permanent in die Save-Datei."""
+        """
+        @brief Sichert die aktuellen Upgrade-Stufen permanent in die
+               Save-Datei des aktiven Slots.
+        """
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -75,14 +91,22 @@ class UpgradeManager:
         save_game(aktiver_slot, spielstand)
 
     def get_level(self, upgrade_key):
-        """Aktuelle Stufe eines Upgrades (0 = noch keine Stufe gekauft)."""
+        """
+        @brief Liefert die aktuelle Stufe eines Upgrades.
+        @param upgrade_key Schlüssel aus UPGRADE_DEFS (z.B. "inventar").
+        @return Aktuelle Stufe (int), 0 falls noch keine Stufe gekauft.
+        """
         return self.levels.get(upgrade_key, 0)
 
     def get_cost(self, upgrade_key):
         """
-        Berechnet die Kosten für die NÄCHSTE Stufe eines Upgrades.
+        @brief Berechnet die Kosten für die NÄCHSTE Stufe eines Upgrades.
+
         Formel: base_cost * (cost_multiplier ^ aktuelle_stufe)
         Dadurch wird jede weitere Stufe teurer.
+
+        @param upgrade_key Schlüssel aus UPGRADE_DEFS.
+        @return Kosten der nächsten Stufe in Euro (int, gerundet).
         """
         info = UPGRADE_DEFS[upgrade_key]
         aktuelle_stufe = self.get_level(upgrade_key)
@@ -90,22 +114,32 @@ class UpgradeManager:
         return int(round(kosten))
 
     def can_afford(self, upgrade_key, money):
+        """
+        @brief Prüft, ob genug Geld für die nächste Stufe vorhanden ist
+               und das Max-Level noch nicht erreicht wurde.
+        @param upgrade_key Schlüssel aus UPGRADE_DEFS.
+        @param money Aktuell verfügbares Geld.
+        @return True, falls das Upgrade gekauft werden könnte.
+        """
         if self.get_level(upgrade_key) >= MAX_LEVEL:
             return False
         return money >= self.get_cost(upgrade_key)
 
     def purchase(self, upgrade_key, money):
         """
-        Versucht, ein Upgrade um eine Stufe zu erhöhen.
+        @brief Versucht, ein Upgrade um eine Stufe zu erhöhen.
 
         Bei Erfolg: erhöht die Stufe, zieht die Kosten vom übergebenen
         'money' ab und speichert GELD + UPGRADES in EINEM einzigen
-        Schreibvorgang (load -> ändern -> save), damit sich Käufer
+        Schreibvorgang (load -> ändern -> save), damit sich Käufe
         aus main_screen.py und dieser Save-Aufruf nicht gegenseitig
         überschreiben.
 
-        Gibt (erfolg: bool, neuer_geldbetrag: int) zurück.
-        Bei Misserfolg (zu wenig Geld oder Max-Level erreicht): (False, money) unverändert.
+        @param upgrade_key Schlüssel aus UPGRADE_DEFS.
+        @param money Aktuell verfügbares Geld vor dem Kauf.
+        @return Tupel (erfolg: bool, neuer_geldbetrag: int).
+                Bei Misserfolg (zu wenig Geld oder Max-Level erreicht)
+                wird (False, money) unverändert zurückgegeben.
         """
         if self.get_level(upgrade_key) >= MAX_LEVEL:
             return False, money
@@ -135,41 +169,67 @@ class UpgradeManager:
     # ------------------------------------------------------------
 
     def get_inventory_bonus(self):
-        """+2 Inventarplätze pro Stufe des 'inventar'-Upgrades."""
+        """
+        @brief Berechnet den zusätzlichen Inventarplatz durch das
+               'Größerer Korb'-Upgrade.
+        @return +2 Inventarplätze pro Stufe (int).
+        """
         return self.get_level("inventar") * 2
 
     def get_price_multiplier(self):
-        """Verkaufspreis-Multiplikator, z.B. 2 bei Stufe 2 (+50% pro Stufe)."""
+        """
+        @brief Berechnet den Verkaufspreis-Multiplikator durch das
+               'Verhandlungsgeschick'-Upgrade.
+        @return Multiplikator (float), z.B. 2.0 bei Stufe 2 (+50% pro Stufe).
+        """
         return 1.0 + (self.get_level("preis") * 0.5)
 
     def get_minigame_bar_bonus(self):
-        """Zusätzliche Höhe (Pixel) für den Spieler-Balken im Minigame, pro Stufe."""
+        """
+        @brief Berechnet die zusätzliche Balkenhöhe im Minigame durch
+               das 'Bessere Angel'-Upgrade.
+        @return Zusätzliche Höhe in Pixel (int), +4px pro Stufe.
+        """
         return self.get_level("minigame") * 4
 
     def get_minigame_difficulty_reduction(self):
         """
-        Reduziert effektiv die 'difficulty' jedes Fisches im Minigame.
+        @brief Reduziert effektiv die 'difficulty' jedes Fisches im
+               Minigame durch das 'Bessere Angel'-Upgrade.
+
         Gibt einen Faktor zwischen 0 und 1 zurück, mit dem die
         ursprüngliche difficulty multipliziert wird (kleiner = leichter).
         Pro Stufe -5%, aber nie unter 50% der Originalschwierigkeit.
+
+        @return Reduktionsfaktor (float) im Bereich [0.5, 1.0].
         """
         reduktion = self.get_level("minigame") * 0.05
         return max(0.5, 1.0 - reduktion)
 
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie kann ich bei einer gewichteten Zufallsauswahl seltenere
+    #         Kategorien durch ein Upgrade gezielt häufiger machen, ohne
+    #         die häufigste Kategorie (common) zu verändern?
     def get_rarity_weight_multiplier(self, rarity):
         """
-        Gibt den Gewichtungs-Multiplikator für eine bestimmte Rarity zurück,
-        abhängig von der aktuellen Stufe des 'Köder'-Upgrades.
+        @brief Liefert den Gewichtungs-Multiplikator für eine bestimmte
+               Rarity, abhängig von der aktuellen Stufe des
+               'Köder'-Upgrades.
 
         Idee: "common" bleibt unverändert (Multiplikator 1.0), aber je
         seltener die Rarity, desto stärker wird ihr Gewicht pro Stufe
         angehoben. Dadurch verschiebt sich die Gesamtverteilung Schritt
-        für Schritt zugunsten selterener Fische, ohne dass Common komplett
+        für Schritt zugunsten seltenerer Fische, ohne dass Common komplett
         verschwindet.
 
         Reihenfolge der Seltenheits-Ränge (0 = am häufigsten):
         common=0, uncommon=1, rare=2, epic=3, legendary=4, mythic=5, divine=6
-        Jeder Rang bekommt pro Stufe +12% Gewicht relativ zu seinem Rang.
+        Jeder Rang bekommt pro Stufe +25% Gewicht relativ zu seinem Rang.
+
+        @param rarity Rarity-Schlüssel (z.B. "common", "legendary", ...).
+        @return Multiplikator (float) >= 1.0, mit dem das Basisgewicht
+                der Rarity in pick_random_fish() verrechnet wird.
         """
         seltenheits_rang = {
             "common": 0,
@@ -182,6 +242,7 @@ class UpgradeManager:
         }
         stufe = self.get_level("koeder")
         rang = seltenheits_rang.get(rarity, 0)
-        # +12% pro Stufe, skaliert mit dem Seltenheits-Rang
+        # +25% pro Stufe, skaliert mit dem Seltenheits-Rang
         # (common: Rang 0 -> immer Multiplikator 1.0, bleibt unverändert)
-        return 1.0 + (stufe * 0.12 * rang)
+        return 1.0 + (stufe * 0.25 * rang)
+    # KI-Ende

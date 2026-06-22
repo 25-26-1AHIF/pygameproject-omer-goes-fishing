@@ -3,23 +3,50 @@ import random
 from game_variables.game_variables import GameVariables as gv
 from inventar import FISH_TYPES, RARITY_INFO
 
-
-def pick_random_fish():
+# KI-Anfang
+# KI: Claude
+# prompt: Wie gewichte ich eine Zufallsauswahl in Python nach
+#         mehreren Faktoren (Rarity-Gewicht * Upgrade-Multiplikator)?
+def pick_random_fish(upgrade_manager):
     """
-    Wählt einen Fisch GEWICHTET nach Rarity aus, statt mit
-    gleicher Wahrscheinlichkeit für alle (wie vorher random.choice).
+    @brief Wählt einen Fisch gewichtet nach Rarity UND Köder-Upgrade aus.
 
-    Jeder Fisch erbt das 'weight' seiner Rarity aus RARITY_INFO.
-    Seltenere Rarities (z.B. divine) haben ein sehr niedriges Gewicht
-    und werden dadurch sehr viel seltener gezogen als z.B. common.
+    Statt einer gleichverteilten Auswahl (random.choice) wird hier
+    random.choices() mit individuellen Gewichten pro Fisch verwendet.
+    Jeder Fisch erbt zunächst das Basis-"weight" seiner Rarity aus
+    RARITY_INFO. Dieses Basisgewicht wird zusätzlich mit dem
+    Köder-Upgrade-Multiplikator der jeweiligen Rarity verrechnet
+    (siehe upgrades.py -> get_rarity_weight_multiplier()), sodass
+    seltenere Fische mit steigendem Köder-Level häufiger gezogen werden.
+
+    @param upgrade_manager Instanz von UpgradeManager, liefert den
+                            aktuellen Köder-Level und die Multiplikatoren.
+    @return Name eines zufällig gezogenen Fisches (str), passend
+            gewichtet nach Rarity und Upgrade-Stand.
     """
     namen = list(FISH_TYPES.keys())
-    gewichte = [RARITY_INFO[FISH_TYPES[name]["rarity"]]["weight"] for name in namen]
+    gewichte = []
+    for name in namen:
+        rarity = FISH_TYPES[name]["rarity"]
+        basis_gewicht = RARITY_INFO[rarity]["weight"]
+        koeder_multiplikator = upgrade_manager.get_rarity_weight_multiplier(rarity)
+        gewichte.append(basis_gewicht * koeder_multiplikator)
     return random.choices(namen, weights=gewichte, k=1)[0]
+# KI-Ende
 
 
 class FishingSystem:
+    """
+    @brief Steuert den gesamten Angel-Ablauf (Werfen, Warten, Biss,
+           Minigame, Ergebnis) sowie dessen Darstellung auf dem Bildschirm.
+    """
+
     def __init__(self, inventory):
+        """
+        @brief Initialisiert das Angelsystem mit Standardwerten.
+        @param inventory Inventory-Instanz, über die Fänge gespeichert
+                          und Upgrade-Werte abgefragt werden.
+        """
         self.inventory = inventory
         self.state = "IDLE"  # IDLE, WAITING, BITE, MINIGAME, RESULT
         self.timer = 0
@@ -48,7 +75,12 @@ class FishingSystem:
         self.progress = 30.0
 
     def handle_event(self, event, is_moving=False):
-        """Verarbeitet den Tastendruck für SPACE."""
+        """
+        @brief Verarbeitet den Tastendruck für SPACE je nach aktuellem Status.
+        @param event Pygame-Event aus der Event-Queue.
+        @param is_moving True, falls sich das Boot aktuell bewegt
+                          (verhindert das Werfen des Köders).
+        """
         if event.type != pygame.KEYDOWN or event.key != pygame.K_SPACE:
             return
 
@@ -73,8 +105,8 @@ class FishingSystem:
 
         elif self.state == "BITE":
             self.state = "MINIGAME"
-            # Gewichtete Auswahl statt gleichverteilter Zufallsauswahl
-            self.current_fish = pick_random_fish()
+            # Gewichtete Auswahl inkl. Köder-Upgrade statt reinem Zufall
+            self.current_fish = pick_random_fish(self.inventory.upgrade_manager)
             self.progress = 30.0
             # Balkenhöhe inkl. Bonus durch das 'Bessere Angel'-Upgrade
             bonus = self.inventory.upgrade_manager.get_minigame_bar_bonus()
@@ -85,14 +117,23 @@ class FishingSystem:
             print(f"Ein {self.current_fish} ({FISH_TYPES[self.current_fish]['rarity']}) hat angebissen! Minigame startet.")
 
     def _set_result(self, text, colour=(255, 255, 255), duration=120):
-        """Hilfsmethode zum Setzen des Status-Ergebnisses."""
+        """
+        @brief Hilfsmethode zum Setzen des Status-Ergebnisses.
+        @param text Anzuzeigender Ergebnistext.
+        @param colour RGB-Farbtupel für den Text.
+        @param duration Anzeigedauer in Frames.
+        """
         self.state = "RESULT"
         self.result_text = text
         self.result_colour = colour
         self.timer = duration
 
     def update(self):
-        """Aktualisiert die Logik des Angelsystems pro Frame."""
+        """
+        @brief Aktualisiert die Logik des Angelsystems um einen Frame.
+               Wechselt je nach Timer/Status zwischen WAITING, BITE,
+               MINIGAME und RESULT.
+        """
         if self.warning_timer > 0:
             self.warning_timer -= 1
 
@@ -112,7 +153,10 @@ class FishingSystem:
             self.state = "IDLE"
 
     def _update_minigame(self):
-        """Interne Logik für das eigentliche Minigame."""
+        """
+        @brief Interne Logik für das eigentliche Fang-Minigame:
+               Spieler-Balken-Physik, Fisch-Bewegung und Fortschrittsbalken.
+        """
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             self.player_vel += self.lift
 
@@ -153,7 +197,11 @@ class FishingSystem:
             self._set_result("Entkommen!", (255, 50, 50))
 
     def draw(self, screen):
-        """Zeigt die grafischen Elemente des Angelsystems auf dem Bildschirm."""
+        """
+        @brief Zeichnet alle grafischen Elemente des Angelsystems
+               (Warnungen, Status-Texte, Minigame-UI) auf den Bildschirm.
+        @param screen Pygame-Surface, auf die gezeichnet wird.
+        """
 
         if self.warning_timer > 0:
             warn_txt = gv.FONT_BIG.render(self.warning_text, True, (255, 75, 75))
