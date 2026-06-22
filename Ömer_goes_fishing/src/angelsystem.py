@@ -81,6 +81,10 @@ class FishingSystem:
         @param is_moving True, falls sich das Boot aktuell bewegt
                           (verhindert das Werfen des Köders).
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie verarbeite ich einen einzelnen Tastendruck in pygame
+        #         unterschiedlich je nach aktuellem Spielzustand (State Machine)?
         if event.type != pygame.KEYDOWN or event.key != pygame.K_SPACE:
             return
 
@@ -115,6 +119,7 @@ class FishingSystem:
             self.player_vel = 0.0
             self.fish_y = self.fish_target_y = self.ui_height - 30
             print(f"Ein {self.current_fish} ({FISH_TYPES[self.current_fish]['rarity']}) hat angebissen! Minigame startet.")
+        # KI-Ende
 
     def _set_result(self, text, colour=(255, 255, 255), duration=120):
         """
@@ -134,6 +139,10 @@ class FishingSystem:
                Wechselt je nach Timer/Status zwischen WAITING, BITE,
                MINIGAME und RESULT.
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie implementiere ich eine einfache State Machine in Python,
+        #         die per Timer automatisch zwischen Zuständen wechselt?
         if self.warning_timer > 0:
             self.warning_timer -= 1
 
@@ -151,12 +160,18 @@ class FishingSystem:
 
         elif self.state == "RESULT" and self.timer <= 0:
             self.state = "IDLE"
+        # KI-Ende
 
     def _update_minigame(self):
         """
         @brief Interne Logik für das eigentliche Fang-Minigame:
                Spieler-Balken-Physik, Fisch-Bewegung und Fortschrittsbalken.
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie simuliere ich eine einfache Schwerkraft-Physik für
+        #         einen Balken in pygame, der durch Tastendruck nach oben
+        #         gehoben wird und sonst nach unten fällt?
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             self.player_vel += self.lift
 
@@ -165,7 +180,13 @@ class FishingSystem:
 
         if self.player_y in (0, self.ui_height - self.bar_height):
             self.player_vel = 0
+        # KI-Ende
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie bewege ich einen Fisch schrittweise zu einem
+        #         zufälligen Zielpunkt und berechne dabei den Fortschritt
+        #         basierend darauf ob der Spielerbalken den Fisch trifft?
         self.fish_move_timer -= 1
         if self.fish_move_timer <= 0:
             self.fish_target_y = random.randint(10, self.ui_height - 15)
@@ -195,6 +216,7 @@ class FishingSystem:
                 self._set_result("Inventar voll! Erst verkaufen.", (255, 150, 0))
         elif self.progress <= 0:
             self._set_result("Entkommen!", (255, 50, 50))
+        # KI-Ende
 
     def draw(self, screen):
         """
@@ -203,6 +225,10 @@ class FishingSystem:
         @param screen Pygame-Surface, auf die gezeichnet wird.
         """
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie zeige ich verschiedene Status-Texte in pygame
+        #         zentriert auf dem Bildschirm an, je nach aktuellem Spielzustand?
         if self.warning_timer > 0:
             warn_txt = gv.FONT_BIG.render(self.warning_text, True, (255, 75, 75))
             warn_rect = warn_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 3))
@@ -220,8 +246,14 @@ class FishingSystem:
             txt = gv.FONT_BIG.render(self.result_text, True, self.result_colour)
             draw_rect = txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 7))
             screen.blit(txt, draw_rect)
+        # KI-Ende
 
         elif self.state == "MINIGAME":
+            # KI-Anfang
+            # KI: Claude
+            # prompt: Wie zeichne ich eine vertikale Minigame-UI mit
+            #         Spielerbalken, Fischpunkt und Fortschrittsanzeige
+            #         in pygame auf der rechten Bildschirmseite?
             pygame.draw.rect(screen, (40, 40, 40), (self.ui_x, self.ui_y, self.ui_width, self.ui_height))
             pygame.draw.rect(screen, "white", (self.ui_x, self.ui_y, self.ui_width, self.ui_height), 2)
 
@@ -242,3 +274,4 @@ class FishingSystem:
 
             rarity_lbl = gv.FONT_SMALL.render(f"[{fisch_daten['rarity'].upper()}]", True, fisch_daten["colour"])
             screen.blit(rarity_lbl, (self.ui_x - 115, self.ui_y - 20))
+            # KI-Ende

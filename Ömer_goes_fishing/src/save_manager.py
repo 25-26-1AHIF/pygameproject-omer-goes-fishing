@@ -4,6 +4,10 @@ import time
 
 SAVE_DIR = "./saves"
 
+# KI-Anfang
+# KI: Claude
+# prompt: Wie speichere ich Spielstände in Python als JSON-Dateien
+#         mit automatischem Ordner erstellen, falls er nicht existiert?
 # Ordner erstellen, falls er noch nicht existiert
 if not os.path.exists(SAVE_DIR):
     os.makedirs(SAVE_DIR)
@@ -34,3 +38,4 @@ def delete_save(slot):
         os.remove(path)
         return True
     return False
+# KI-Ende

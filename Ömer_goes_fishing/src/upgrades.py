@@ -13,6 +13,10 @@ from save_manager import save_game, load_save
 # - "preis"     : erhöht den Verkaufspreis aller Fische (Prozent-Bonus)
 # - "koeder"    : verschiebt die Rarity-Gewichtung zugunsten selterener Fische
 
+# KI-Anfang
+# KI: Claude
+# prompt: Wie strukturiere ich ein Upgrade-System mit Name, Beschreibung,
+#         Basiskosten und Kostenmultiplikator in einem Python Dictionary?
 UPGRADE_DEFS = {
     "inventar": {
         "name": "Größerer Korb",
@@ -39,6 +43,7 @@ UPGRADE_DEFS = {
         "cost_multiplier": 1.2,
     },
 }
+# KI-Ende
 
 # Wie viele Stufen ein Upgrade maximal haben darf (Sicherheitsgrenze,
 # damit nichts ins Absurde wächst). Kann später erhöht werden.
@@ -66,6 +71,10 @@ class UpgradeManager:
         @brief Lädt die gespeicherten Upgrade-Stufen aus dem aktuell
                aktiven Save-Slot. Fehlt ein Eintrag, bleibt die Stufe 0.
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie lade ich gespeicherte Upgrade-Level aus einer
+        #         JSON-Datei und setze fehlende Einträge automatisch auf 0?
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -75,12 +84,17 @@ class UpgradeManager:
                 self.levels[key] = gespeichert.get(key, 0)
         else:
             self.levels = {key: 0 for key in UPGRADE_DEFS}
+        # KI-Ende
 
     def save_to_disk(self):
         """
         @brief Sichert die aktuellen Upgrade-Stufen permanent in die
                Save-Datei des aktiven Slots.
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie speichere ich nur den upgrades-Schlüssel in einer
+        #         bestehenden JSON-Datei ohne andere Felder zu überschreiben?
         aktiver_slot = getattr(gv, 'current_slot', 1)
         spielstand = load_save(aktiver_slot)
 
@@ -89,6 +103,7 @@ class UpgradeManager:
 
         spielstand["upgrades"] = self.levels
         save_game(aktiver_slot, spielstand)
+        # KI-Ende
 
     def get_level(self, upgrade_key):
         """
@@ -108,10 +123,15 @@ class UpgradeManager:
         @param upgrade_key Schlüssel aus UPGRADE_DEFS.
         @return Kosten der nächsten Stufe in Euro (int, gerundet).
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie berechne ich exponentiell steigende Kosten für
+        #         ein Upgrade-System in einem Spiel mit Python?
         info = UPGRADE_DEFS[upgrade_key]
         aktuelle_stufe = self.get_level(upgrade_key)
         kosten = info["base_cost"] * (info["cost_multiplier"] ** aktuelle_stufe)
         return int(round(kosten))
+        # KI-Ende
 
     def can_afford(self, upgrade_key, money):
         """
@@ -121,9 +141,14 @@ class UpgradeManager:
         @param money Aktuell verfügbares Geld.
         @return True, falls das Upgrade gekauft werden könnte.
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie prüfe ich in Python ob ein Kauf möglich ist,
+        #         wenn sowohl ein Geldlimit als auch ein Max-Level beachtet werden?
         if self.get_level(upgrade_key) >= MAX_LEVEL:
             return False
         return money >= self.get_cost(upgrade_key)
+        # KI-Ende
 
     def purchase(self, upgrade_key, money):
         """
@@ -148,6 +173,11 @@ class UpgradeManager:
         if money < kosten:
             return False, money
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie speichere ich Geld und Upgrade-Level gleichzeitig
+        #         in einer JSON-Datei, damit sich zwei Schreibvorgänge
+        #         nicht gegenseitig überschreiben (atomares Speichern)?
         self.levels[upgrade_key] += 1
         verbleibendes_geld = money - kosten
 
@@ -162,12 +192,17 @@ class UpgradeManager:
         save_game(aktiver_slot, spielstand)
 
         return True, verbleibendes_geld
+        # KI-Ende
 
     # ------------------------------------------------------------
     # Effektive Werte, die andere Module (inventar.py, angelsystem.py)
     # abfragen, um die tatsächliche Spiel-Auswirkung zu bestimmen.
     # ------------------------------------------------------------
 
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie berechne ich Bonus-Werte für verschiedene Spielmechaniken
+    #         (Inventar, Preis, Balken) aus dem aktuellen Upgrade-Level?
     def get_inventory_bonus(self):
         """
         @brief Berechnet den zusätzlichen Inventarplatz durch das
@@ -191,6 +226,7 @@ class UpgradeManager:
         @return Zusätzliche Höhe in Pixel (int), +4px pro Stufe.
         """
         return self.get_level("minigame") * 4
+    # KI-Ende
 
     def get_minigame_difficulty_reduction(self):
         """
@@ -203,8 +239,13 @@ class UpgradeManager:
 
         @return Reduktionsfaktor (float) im Bereich [0.5, 1.0].
         """
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie berechne ich eine prozentuale Schwierigkeitsreduktion
+        #         mit einem Mindestwert (Untergrenze) in Python?
         reduktion = self.get_level("minigame") * 0.05
         return max(0.5, 1.0 - reduktion)
+        # KI-Ende
 
     # KI-Anfang
     # KI: Claude

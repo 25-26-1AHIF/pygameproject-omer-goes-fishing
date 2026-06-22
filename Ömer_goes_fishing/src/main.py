@@ -20,6 +20,10 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     back_text = gv.FONT_BIG.render("X", True, "white")
     back_rect = back_text.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie erstelle ich in pygame eine Liste mit klickbaren
+    #         Buttons für mehrere Speicherstände mit Löschen-Funktion?
     # Listen für die Buttons erstellen
     slot_texts = []
     slot_rects = []
@@ -45,6 +49,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         dr = dt.get_rect(center=(gv.SCREEN_WIDTH // 2 + 250, y_pos))
         delete_texts.append(dt)
         delete_rects.append(dr)
+    # KI-Ende
 
     while True:
         for event in pygame.event.get():
@@ -72,6 +77,11 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                         slot_num = i + 1
                         delete_save(slot_num)
 
+                        # KI-Anfang
+                        # KI: Claude
+                        # prompt: Wie aktualisiere ich eine pygame-UI-Liste
+                        #         dynamisch nach dem Löschen eines Eintrags,
+                        #         ohne den ganzen Screen neu zu laden?
                         # Listen leeren und neu aufbauen
                         slot_texts = []
                         slot_rects = []
@@ -94,6 +104,7 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                             dr = dt.get_rect(center=(gv.SCREEN_WIDTH // 2 + 250, y_pos))
                             delete_texts.append(dt)
                             delete_rects.append(dr)
+                        # KI-Ende
 
                 if back_rect.collidepoint(event.pos):
                     return GameScreens.MAIN
@@ -125,6 +136,10 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     upgrade_keys = list(UPGRADE_DEFS.keys())  # feste Reihenfolge: inventar, minigame, preis
 
     Fishing_hut_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Fishing_hut.png").convert()
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie skaliere ich ein Hintergrundbild in pygame so, dass es
+    #         den gesamten Bildschirm ausfüllt ohne verzerrt zu werden (cover-Modus)?
     Hintergrund_raw = pygame.image.load("./assets/Hintergründe/Ocean_1/4.png").convert()
     bg_w, bg_h = Hintergrund_raw.get_size()
     scale_factor_bg = max(gv.SCREEN_WIDTH / bg_w, gv.SCREEN_HEIGHT / bg_h)
@@ -132,6 +147,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     new_bg_h = int(bg_h * scale_factor_bg)
     Hintergrund = pygame.transform.scale(Hintergrund_raw, (new_bg_w, new_bg_h))
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
+    # KI-Ende
 
     TARGET_BLOCK_SIZE = 96
     bloecke_hoch = 1
@@ -152,6 +168,10 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     sand_width = sand_bloecke_breite * TARGET_BLOCK_SIZE
     water_width = gv.SCREEN_WIDTH - sand_width
 
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie kachele ich Boden-Tiles (Sand und Wasser) in pygame
+    #         so, dass sie den unteren Bildschirmbereich lückenlos füllen?
     sand_surface = pygame.Surface((sand_width, bereich_height), pygame.SRCALPHA)
     for y in range(0, bereich_height, TARGET_BLOCK_SIZE):
         for x in range(0, sand_width, TARGET_BLOCK_SIZE):
@@ -161,6 +181,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     for y in range(0, bereich_height, wasser_scaled_h):
         for x in range(0, water_width + wasser_scaled_w, wasser_scaled_w):
             water_surface.blit(wasser_tile, (x, y))
+    # KI-Ende
 
     SCALE_FACTOR = 2.5
     boot_raw = pygame.image.load("./assets/Haupt_Fisch_Sachen/3 Objects/Boat.png").convert_alpha()
@@ -175,6 +196,10 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     # --- ANIMATION SETUP ---
     frame_width, frame_height = 48, 48
 
+    # KI-Anfang
+    # KI: Claude
+    # prompt: Wie schneide ich einzelne Frames aus einem Sprite-Sheet
+    #         in pygame aus und skaliere sie für die Animation?
     # 1. Row/Walk Animation (Fahren)
     fischer_row_sheet = pygame.image.load("./assets/Haupt_Fisch_Sachen/1 Fisherman/Fisherman_row.png").convert_alpha()
     fischer_row_frames = []
@@ -202,6 +227,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     for i in range(6):
         frame = fischer_hook_sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height))
         fischer_hook_frames.append(pygame.transform.scale(frame, (int(frame_width * SCALE_FACTOR), int(frame_height * SCALE_FACTOR))))
+    # KI-Ende
 
     current_frame = 0
     animation_counter = 0
@@ -263,6 +289,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         else:
             player_speed = 5
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie bewege ich einen Spieler in pygame mit Grenzen
+        #         nach links und rechts, wobei beide Tasten gleichzeitig
+        #         gedrückt keine Bewegung auslösen sollen?
         moved_this_frame = False
 
         # Bewegung nur erlauben, wenn die Angel NICHT im Wasser ist UND das Menü zu ist
@@ -287,6 +318,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             player_x = sand_width - 8
         if player_x > max_x:
             player_x = max_x
+        # KI-Ende
 
         if player_x <= sand_width and keys[pygame.K_e] and not upgrade_menu_open:
             inventory.sell_all_fish()
@@ -296,6 +328,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         both_keys_pressed = (keys[pygame.K_a] or keys[pygame.K_LEFT]) and (keys[pygame.K_d] or keys[pygame.K_RIGHT])
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie wechsle ich in pygame dynamisch zwischen verschiedenen
+        #         Animationszuständen (Idle, Laufen, Angeln) basierend auf
+        #         dem aktuellen Spielzustand mit einem Frame-Counter?
         if fishing_system.state == "IDLE":
             if moved_this_frame:
                 if animation_counter >= 9:
@@ -320,6 +357,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     current_frame += 1
                     animation_counter = 0
             active_frames = fischer_hook_frames
+        # KI-Ende
 
         if current_frame >= len(active_frames):
             current_frame = 0
@@ -339,13 +377,16 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         pygame.draw.rect(interaction_line, (255, 255, 0, 76), interaction_line.get_rect(), 0)
         screen.blit(interaction_line, (sand_width, y_position_am_boden))
 
-        # Boot zeichnen
+        # KI-Anfang
+        # KI: ChatGPT
+        # prompt: Wie gebe ich ein Bild in pygame aus?
         screen.blit(boot_img, (player_x, boat_y))
 
         # Fischer rendern
         fischer_display = pygame.transform.flip(active_frames[current_frame], player_direction == -1, False)
         offset_x = int(player_x_offset * 0.1) if player_direction == -1 else player_x_offset
         screen.blit(fischer_display, (player_x + offset_x, boat_y + player_y_offset))
+        # KI-Ende
 
         fishing_system.draw(screen)
 
@@ -359,6 +400,10 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
         screen.blit(money_txt, (20, 20))
 
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie zeige ich den Inventarinhalt als formatierten Text
+        #         in pygame an und färbe ihn rot wenn das Limit erreicht ist?
         # Inventar-Anzeige inkl. Füllstand (z.B. "7/10"), damit man sieht,
         # wie viel Platz noch frei ist, bevor man verkaufen muss.
         gesamt_fische = inventory.total_fish_count()
@@ -372,6 +417,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             f"Inventar ({gesamt_fische}/{max_fische}): {inv_string}", True, inv_farbe
         )
         screen.blit(inv_txt, (20, 55))
+        # KI-Ende
 
         if player_x <= sand_width:
             shop_txt = gv.FONT_SMALL.render("Drücke 'E' zum Verkaufen | 'U' für Upgrades", True, (255, 255, 100))
@@ -380,6 +426,10 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
         # --- UPGRADE-MENÜ ---
         if upgrade_menu_open:
+            # KI-Anfang
+            # KI: Claude
+            # prompt: Wie zeichne ich ein halbtransparentes Overlay-Menü
+            #         mit abgerundeten Ecken und Buttons in pygame?
             menu_width, menu_height = 560, 340
             menu_x = gv.SCREEN_WIDTH // 2 - menu_width // 2
             menu_y = 140
@@ -421,7 +471,12 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                 preis_txt = gv.FONT_MIDDLE.render(preis_text, True, zeilen_farbe)
                 preis_rect = preis_txt.get_rect(midright=(row_rect.right - 15, row_rect.centery))
                 screen.blit(preis_txt, preis_rect)
+            # KI-Ende
 
+        # KI-Anfang
+        # KI: Claude
+        # prompt: Wie zeige ich in pygame ein Gewinn-Bild mit Text an,
+        #         wenn der Spieler eine bestimmte Geldsumme erreicht hat?
         if save_data["money"] >= 50000:
             end_txt = gv.FONT_BIG.render("Glückwunsch! Du hast 50.000€ erreicht!", True, "green")
             end_rect = end_txt.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
@@ -429,6 +484,7 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
             end_bild = End_Bild.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
             screen.blit(End_Bild, end_bild)
             screen.blit(end_txt, end_rect)
+        # KI-Ende
 
         pygame.display.flip()
         clock.tick(gv.FPS)
