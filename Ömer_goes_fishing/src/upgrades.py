@@ -62,9 +62,15 @@ class UpgradeManager:
         @brief Initialisiert alle Upgrade-Stufen mit 0 und lädt
                anschließend den gespeicherten Stand (falls vorhanden).
         """
-        # levels speichert pro Upgrade-Typ die aktuelle Stufe (0 = noch nicht gekauft)
+
+        # KI: ChatGPT
+        # prompt: Erstelle ein Dictionary, das für jeden Upgrade-Typ den Startlevel 0 setzt.
         self.levels = {key: 0 for key in UPGRADE_DEFS}
+
+        # KI: ChatGPT
+        # prompt: Lade gespeicherte Upgrade-Level aus dem aktuellen Save-Slot.
         self.load_from_save()
+        # KI Ende
 
     def load_from_save(self):
         """
