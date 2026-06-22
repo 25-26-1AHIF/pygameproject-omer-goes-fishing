@@ -190,7 +190,7 @@ class FishingSystem:
 
             fisch_daten = FISH_TYPES[self.current_fish]
             lbl = gv.FONT_MIDDLE.render(f"Fisch: {self.current_fish}", True, fisch_daten["colour"])
-            screen.blit(lbl, (self.ui_x - 65, self.ui_y - 45))
+            screen.blit(lbl, (self.ui_x - 120, self.ui_y - 45))
 
             rarity_lbl = gv.FONT_SMALL.render(f"[{fisch_daten['rarity'].upper()}]", True, fisch_daten["colour"])
-            screen.blit(rarity_lbl, (self.ui_x - 65, self.ui_y - 20))
+            screen.blit(rarity_lbl, (self.ui_x - 115, self.ui_y - 20))

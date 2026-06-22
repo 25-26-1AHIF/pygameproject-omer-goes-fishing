@@ -432,16 +432,18 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                                            "white")
     Verkaufen_ctrl = gv.FONT_MIDDLE.render("E zum Verkaufen (nur am Sand möglich)", True, "white")
     Upgrades_menu_ctrl = gv.FONT_MIDDLE.render("U für Upgrade Menü (nur am Sand möglich)", True, "white")
-    pause_ctrl = gv.FONT_MIDDLE.render("ESC für Pausenmenü / Exit", True, "white")
+    interaction_ctrl = gv.FONT_MIDDLE.render("Links zum interagieren", True, "white")
+    back_ctrl = gv.FONT_MIDDLE.render("ESC für Pausenmenü / Exit", True, "white")
     x = gv.FONT_BIG.render("X", True, "white")
 
+    interaction_rect = interaction_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 150))
     Hintergrund_rect = Hintergrund.get_rect(center=(gv.SCREEN_WIDTH // 2, gv.SCREEN_HEIGHT // 2))
-    Upgrades_menu_rect = Upgrades_menu_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 500))
-    Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 100))
-    Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 200))
+    Upgrades_menu_rect = Upgrades_menu_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 400))
+    Boot_ctrls_rect = Boot_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 200))
+    Köder_ctrls_rect = Köder_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 250))
     minigame_ctrls_rect = minigame_ctrls.get_rect(center=(gv.SCREEN_WIDTH // 2, 300))
-    interact_ctrl_rect = Verkaufen_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 400))
-    pause_ctrl_rect = pause_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 600))
+    interact_ctrl_rect = Verkaufen_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 350))
+    back_ctrl_rect = back_ctrl.get_rect(center=(gv.SCREEN_WIDTH // 2, 450))
     x_rect = x.get_rect(center=(gv.SCREEN_WIDTH // 5, 100))
 
     while True:
@@ -456,11 +458,12 @@ def controls_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     return GameScreens.MAIN
 
         screen.blit(Hintergrund, Hintergrund_rect)
+        screen.blit(interaction_ctrl, interaction_rect)
         screen.blit(Boot_ctrls, Boot_ctrls_rect)
         screen.blit(Köder_ctrls, Köder_ctrls_rect)
         screen.blit(minigame_ctrls, minigame_ctrls_rect)
         screen.blit(Verkaufen_ctrl, interact_ctrl_rect)
-        screen.blit(pause_ctrl, pause_ctrl_rect)
+        screen.blit(back_ctrl, back_ctrl_rect)
         screen.blit(Upgrades_menu_ctrl, Upgrades_menu_rect)
         screen.blit(x, x_rect)
         pygame.display.flip()

@@ -29,7 +29,8 @@ Alles beginnt am Strand beim Pier. Onkel Ibo schenkt Ömer zu seinem **18. Gebur
 | `SPACE`          | Köder werfen                     |
 | `SPACE` (halten) | Fisch im Minigame verfolgen      |
 | `E`              | Verkaufen                        |
-| `U`              | Upgrades kaufen                  |
+| `U`              | Upgrade Menü                     |
+| `Links klick`    | Interagieren                     |
 | `ESC`            | Pausenmenü / Exit                |
 
 ---
