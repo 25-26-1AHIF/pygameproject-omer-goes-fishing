@@ -53,12 +53,16 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
     while True:
         for event in pygame.event.get():
+            # KI: Gemini
+            # prompt: Standard Event-Loop für Quit und Escape.
             if event.type == pygame.QUIT:
                 return GameScreens.EXIT
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return GameScreens.MAIN
 
+            # KI: ChatGPT
+            # prompt: Slot anklicken und ggf. neuen Save erstellen.
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Klick auf einen Slot überprüfen
                 for i in range(len(slot_rects)):
@@ -76,6 +80,8 @@ def save_slots_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     if rect.collidepoint(event.pos):
                         slot_num = i + 1
                         delete_save(slot_num)
+
+            #Ki Ende
 
                         # KI-Anfang
                         # KI: Claude
@@ -240,13 +246,16 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
     player_direction = 1  # 1 = rechts, -1 = links
 
     while True:
-        # Bei einem neuen Statuswechsel setzen wir den Frame-Zähler zurück
+
+        # KI: Gemini
+        # prompt: Animation zurücksetzen wenn Zustand sich ändert.
         if fishing_system.state != last_state:
             current_frame = 0
             animation_counter = 0
             last_state = fishing_system.state
 
-        # 1. Alle Events abarbeiten
+        # KI: ChatGPT
+        # prompt: Standard Event-Loop für Movement, Menü und Quit.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return GameScreens.EXIT
@@ -258,11 +267,11 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                         return GameScreens.SAVE_SLOTS
 
                 if event.key == pygame.K_u and player_x <= sand_width:
-                    # Menü nur am Sand (Shop-Bereich) öffnen/schließen
                     upgrade_menu_open = not upgrade_menu_open
 
+            # KI: Claude
+            # prompt: Upgrade-Zeilen anklicken.
             if event.type == pygame.MOUSEBUTTONDOWN and upgrade_menu_open:
-                # Klick auf eine der Upgrade-Zeilen prüfen
                 mouse_x, mouse_y = event.pos
                 for idx, key in enumerate(upgrade_keys):
                     row_y = 220 + idx * 70
@@ -270,17 +279,23 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
                     if row_rect.collidepoint(mouse_x, mouse_y):
                         save_data_for_buy = load_save(gv.current_slot) or {"money": 0}
                         aktuelles_geld = save_data_for_buy.get("money", 0)
-                        # purchase() speichert Geld + Upgrade-Level selbst in einem Zug
                         upgrade_manager.purchase(key, aktuelles_geld)
 
             current_keys = pygame.key.get_pressed()
             is_moving_now = (current_keys[pygame.K_a] or current_keys[pygame.K_LEFT] or
                              current_keys[pygame.K_d] or current_keys[pygame.K_RIGHT])
 
+            # KI: DeepSeek
+            # prompt: Angel-Events nur verarbeiten wenn Menü zu ist.
+            if not upgrade_menu_open:
+                fishing_system.handle_event(event, is_moving_now)
+
             # Während das Upgrade-Menü offen ist, soll nicht gleichzeitig
             # geangelt werden können (sonst überschneiden sich die UIs)
             if not upgrade_menu_open:
                 fishing_system.handle_event(event, is_moving_now)
+
+            #Ki Ende
 
         keys = pygame.key.get_pressed()
 
