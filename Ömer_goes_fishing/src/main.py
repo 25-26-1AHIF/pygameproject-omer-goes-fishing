@@ -287,9 +287,6 @@ def play_screen(screen: pygame.Surface, clock: pygame.time.Clock):
 
             # KI: DeepSeek
             # prompt: Angel-Events nur verarbeiten wenn Menü zu ist.
-            if not upgrade_menu_open:
-                fishing_system.handle_event(event, is_moving_now)
-
             # Während das Upgrade-Menü offen ist, soll nicht gleichzeitig
             # geangelt werden können (sonst überschneiden sich die UIs)
             if not upgrade_menu_open:
